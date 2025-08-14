@@ -18,13 +18,21 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod());
 });
 
+// ====== 設定 SQLite DB 路徑到 Azure 持久化資料夾 ======
+var dataPath = Path.Combine(Environment.GetEnvironmentVariable("HOME") ?? ".", "data");
+if (!Directory.Exists(dataPath))
+{
+    Directory.CreateDirectory(dataPath);
+}
+var dbFilePath = Path.Combine(dataPath, "drinkshop.db");
+
 // Add services to the container.
 builder.Services.AddControllers();
 // DI 註冊
 builder.Services.AddScoped<IDrinkService, DrinkService>();
 builder.Services.AddScoped<IDrinkRepository, DrinkRepository>();
 builder.Services.AddDbContext<DrinkShopDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=drinkshop.db"));
+    options.UseSqlite($"Data Source={dbFilePath}"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
