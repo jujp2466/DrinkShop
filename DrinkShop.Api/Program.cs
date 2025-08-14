@@ -57,4 +57,12 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
+// ====== 自動建立資料表 (EF Core Migration) ======
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DrinkShopDbContext>();
+    db.Database.Migrate(); // 如果資料表不存在就自動建立
+}
+// ===============================================
+
 app.Run();
