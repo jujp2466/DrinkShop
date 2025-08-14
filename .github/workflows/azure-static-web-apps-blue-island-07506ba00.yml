@@ -76,11 +76,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_ISLAND_07506BA00 }}
           action: "upload"
           # app_location 指向前端原始碼目錄（有 package.json 的地方）
-          app_location: "./drinkshop-frontend"
+          app_location: "./drinkshop-frontend/dist"  # 🔹 改成直接部署 dist
           # api_location 空字串（沒有 API）
           api_location: ""
-          # output_location 指向 Vite build 後的 dist
-          output_location: "dist"
            # 這樣 Oryx 不會用 Node 18 build
           skip_app_build: true
           github_id_token: ${{ steps.idtoken.outputs.result }}
@@ -96,6 +94,7 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           action: "close"
+
 
 
 
