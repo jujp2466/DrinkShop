@@ -1,0 +1,9 @@
+{
+  "routes": [
+    {
+      "route": "/*",             // 所有路徑
+      "serve": "/index.html",    // 都回傳 index.html
+      "statusCode": 200
+    }
+  ]
+}
