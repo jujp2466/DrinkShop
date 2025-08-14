@@ -73,7 +73,7 @@ jobs:
           # app_location 指向前端原始碼目錄（有 package.json 的地方）
           app_location: "./drinkshop-frontend"
           # api_location 空字串（沒有 API）
-          api_location: "./DrinkShop.Api"
+          api_location: ""
           # output_location 指向 Vite build 後的 dist
           output_location: "dist"
           # 跳過 Azure Oryx build，因為我們已經自己 build 過
@@ -92,4 +92,5 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           action: "close"
+
 
