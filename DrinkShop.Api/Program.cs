@@ -9,9 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+        policy.WithOrigins(
+            "http://localhost:5173",
+            "https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net",
+            "https://blue-island-07506ba00.1.azurestaticapps.net"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod());
 });
 
 // Add services to the container.

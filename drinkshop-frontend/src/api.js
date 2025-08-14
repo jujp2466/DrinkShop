@@ -1,5 +1,5 @@
 import axios from 'axios';
 
 export default axios.create({
-  baseURL: 'http://localhost:5249/api/v1', // 請依實際後端 API 調整
+  baseURL: 'https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net/api/v1', // 已改為 Azure App Service 網域
 });
