@@ -1,16 +1,18 @@
+# GitHub Actions CI/CD 設定檔，用於部署到 Azure Static Web Apps
 name: Azure Static Web Apps CI/CD
 
 on:
   push:
     branches:
-      - master
+      - master # 當 master 分支有 push 時觸發
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
-      - master
+      - master # PR 目標是 master 分支時觸發
 
 jobs:
   build_and_deploy_job:
+    # 條件：push 事件，或 PR 開啟/更新(非關閉)
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
@@ -18,35 +20,69 @@ jobs:
        id-token: write
        contents: read
     steps:
+      # 1️⃣ 下載專案，把程式碼檢出到 Runner
       - uses: actions/checkout@v3
         with:
+          # 支援 Git submodule
           submodules: true
+          # 不下載 LFS 檔案
           lfs: false
+      
+      # 2️⃣ 安裝 Node.js（🔹 修改：指定 Node 20 以支援新版本 Vite）
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x' # Azure Static Web Apps Oryx 預設是 18，這裡改成 20
+          
+      # 3️⃣ 安裝前端相依套件（🔹 working-directory 指定到 Vue 專案資料夾）
+      - name: Install dependencies
+        working-directory: ./drinkshop-frontend
+        run: npm install
+
+      # 4️⃣ 編譯前端專案，產生 dist 資料夾
+      - name: Build frontend
+        working-directory: ./drinkshop-frontend
+        run: npm run build
+        
+      # 5️⃣ 安裝 OIDC client (必要套件，Azure API 需要)
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
+
+      # 6️⃣ 取得 GitHub OIDC Token（Azure 驗證用）
       - name: Get Id Token
         uses: actions/github-script@v6
         id: idtoken
         with:
-           script: |
-               const coredemo = require('@actions/core')
-               return await coredemo.getIDToken()
-           result-encoding: string
+          script: |
+            const coredemo = require('@actions/core')
+            return await coredemo.getIDToken()
+          result-encoding: string
+
+           
+      # 7️⃣ 部署到 Azure Static Web Apps
+      # 🔹 app_location 改成 "drinkshop-frontend"（原始碼位置）
+      # 🔹 output_location 改成 "dist"（build 輸出位置）
+      # 🔹 skip_app_build 設為 true，因為我們已經在上面 build 過了
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_ISLAND_07506BA00 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_LIVELY_BAY_0673B1000 }}
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "./drinkshop-frontend" # App source code path
-          api_location: "./DrinkShop.Api" # Api source code path - optional
-          output_location: "dist" # Built app content directory - optional
+          ###### 🔹 修改重點 ######
+          # app_location 指向前端原始碼目錄（有 package.json 的地方）
+          app_location: "./drinkshop-frontend"
+          # api_location 空字串（沒有 API）
+          api_location: "./DrinkShop.Api"
+          # output_location 指向 Vite build 後的 dist
+          output_location: "dist"
+          # 跳過 Azure Oryx build，因為我們已經自己 build 過
+          skip_app_build: true
           github_id_token: ${{ steps.idtoken.outputs.result }}
-          ###### End of Repository/Build Configurations ######
+          ###### End of Configurations ######
 
   close_pull_request_job:
+    # 當 PR 被關閉時，執行關閉 Azure Static Web Apps Preview
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
