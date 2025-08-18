@@ -9,5 +9,6 @@ namespace DrinkShop.Application.Interfaces
         Task AddAsync(Drink drink);
         Task UpdateAsync(Drink drink);
         Task DeleteAsync(int id);
+        Task<List<Drink>> GetDrinksByIdsAsync(List<int> ids);
     }
 }

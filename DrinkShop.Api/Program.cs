@@ -18,13 +18,25 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod());
 });
 
+// ====== 設定 SQLite DB 路徑到應用程式內容根底下的 data 資料夾（避免不同工作目錄造成不同 DB） ======
+var contentRoot = builder.Environment.ContentRootPath; // 明確使用應用程式內容根路徑
+var defaultDataPath = Path.Combine(contentRoot, "data");
+var defaultDbPath = Path.Combine(defaultDataPath, "drinkshop.db");
+// 優先使用環境變數 DB_PATH（可在 Azure App Settings 設定），否則使用預設路徑
+var dbFilePath = Environment.GetEnvironmentVariable("DB_PATH") ?? defaultDbPath;
+var dbFolder = Path.GetDirectoryName(dbFilePath)!;
+if (!Directory.Exists(dbFolder))
+{
+    Directory.CreateDirectory(dbFolder);
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 // DI 註冊
 builder.Services.AddScoped<IDrinkService, DrinkService>();
 builder.Services.AddScoped<IDrinkRepository, DrinkRepository>();
 builder.Services.AddDbContext<DrinkShopDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=drinkshop.db"));
+    options.UseSqlite($"Data Source={dbFilePath}"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -32,6 +44,9 @@ var app = builder.Build();
 
 // 啟用 CORS
 app.UseCors("AllowFrontend");
+
+// Log actual DB path for debugging
+Console.WriteLine($"Using database file: {dbFilePath}");
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
