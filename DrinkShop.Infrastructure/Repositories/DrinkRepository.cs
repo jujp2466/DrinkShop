@@ -24,6 +24,7 @@ namespace DrinkShop.Infrastructure.Repositories
 
         public async Task AddAsync(Drink drink)
         {
+            // 確保新增的 Drink 包含 Quantity
             _context.Drinks.Add(drink);
             await _context.SaveChangesAsync();
         }
@@ -42,6 +43,11 @@ namespace DrinkShop.Infrastructure.Repositories
                 _context.Drinks.Remove(drink);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<List<Drink>> GetDrinksByIdsAsync(List<int> ids)
+        {
+            return await _context.Drinks.Where(d => ids.Contains(d.Id)).ToListAsync();
         }
     }
 }

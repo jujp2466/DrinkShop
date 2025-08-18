@@ -1,5 +1,9 @@
 import axios from 'axios';
 
+const isLocal = window.location.hostname === 'localhost';
+
 export default axios.create({
-  baseURL: 'https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net/api/v1', // 已改為 Azure App Service 網域
+  baseURL: isLocal
+    ? 'http://localhost:5249/api/v1' // 本機測試用
+    : 'https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net/api/v1', // Azure 用
 });
