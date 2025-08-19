@@ -361,3 +361,29 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# SQLite database files
+*.db
+*.sqlite
+
+# Node.js dependencies
+node_modules/
+dist/
+
+# Logs
+*.log
+logs/
+
+# IDE settings
+.idea/
+.vscode/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Test results
+TestResults/
+coverage/
