@@ -11,8 +11,8 @@
         <input v-model.number="newDrink.price" placeholder="請輸入價格" type="number" min="0" required />
       </div>
       <div class="form-group">
-        <label>數量</label>
-        <input v-model.number="newDrink.quantity" placeholder="請輸入數量" type="number" min="0" required />
+        <label>庫存</label>
+        <input v-model.number="newDrink.stock" placeholder="請輸入庫存" type="number" min="0" required />
       </div>
       <button class="add-btn" type="submit">新增飲品</button>
     </form>
@@ -21,7 +21,7 @@
       <li v-for="d in drinks" :key="d.id" class="drink-item">
         <span class="drink-name">{{ d.name }}</span>
         <span class="drink-price">${{ d.price }}</span>
-        <span class="drink-quantity">數量: {{ d.quantity }}</span>
+        <span class="drink-stock">庫存: {{ d.stock }}</span>
         <button class="delete-btn" @click="removeDrink(d.id)">刪除</button>
       </li>
     </ul>
@@ -31,7 +31,7 @@
 import { ref, onMounted } from 'vue';
 import api from '../api';
 const drinks = ref([]);
-const newDrink = ref({ name: '', price: 0, quantity: 0 });
+const newDrink = ref({ name: '', price: 0, stock: 0 });
 const successMsg = ref('');
 const fetchDrinks = async () => {
   try {
@@ -43,12 +43,12 @@ const fetchDrinks = async () => {
 };
 onMounted(fetchDrinks);
 const addDrink = async () => {
-  if (!newDrink.value.name || newDrink.value.price < 0 || newDrink.value.quantity < 0) return;
+  if (!newDrink.value.name || newDrink.value.price < 0 || newDrink.value.stock < 0) return;
   try {
     await api.post('/drink', newDrink.value);
     successMsg.value = '新增成功！';
     setTimeout(() => (successMsg.value = ''), 1500);
-    newDrink.value = { name: '', price: 0, quantity: 0 };
+    newDrink.value = { name: '', price: 0, stock: 0 };
     fetchDrinks();
   } catch {
     successMsg.value = '新增失敗，請檢查後端 API';
@@ -138,7 +138,7 @@ const removeDrink = async (id) => {
   margin-left: 12px;
   margin-right: 12px;
 }
-.drink-quantity {
+.drink-stock {
   color: #8b5c00;
   margin-left: 12px;
 }
