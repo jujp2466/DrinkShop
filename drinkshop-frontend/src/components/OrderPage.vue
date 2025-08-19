@@ -31,7 +31,11 @@
             <h3 class="product-title">{{ drink.name }}</h3>
             <p class="product-description">{{ drink.description || '新鮮美味，清涼解渴' }}</p>
             <p class="product-price">NT$ {{ drink.price }}</p>
-            <button class="btn" @click="addToCart(drink)">加入購物車</button>
+            <div class="quantity-selector">
+              <label for="quantity">數量：</label>
+              <input type="number" v-model.number="quantities[drink.id]" min="1" :id="'quantity-' + drink.id" />
+            </div>
+            <button class="btn" @click="addToCart(drink, quantities[drink.id])">加入購物車</button>
           </div>
         </div>
       </div>
@@ -41,7 +45,8 @@
       <ul class="cart-list">
         <li v-for="item in cart" :key="item.id" class="cart-item">
           <span>{{ item.name }}</span>
-          <span>NT$ {{ item.price }}</span>
+          <span>數量: {{ item.quantity }}</span> <!-- 顯示數量 -->
+          <span>NT$ {{ item.price * item.quantity }}</span> <!-- 更新金額計算 -->
           <button class="delete-btn" @click="removeFromCart(item.id)">移除</button>
         </li>
       </ul>
@@ -112,25 +117,36 @@ import api from '../api';
 
 const drinks = ref([]);
 const cart = ref([]);
+const quantities = ref({});
 
 const fetchDrinks = async () => {
   try {
     const res = await api.get('/drink');
     drinks.value = res.data.data || [];
+    drinks.value.forEach((drink) => {
+      quantities.value[drink.id] = 1; // 初始化每個飲品的數量為 1
+    });
   } catch {
     drinks.value = [];
   }
 };
 
-const addToCart = (drink) => {
-  cart.value.push(drink);
+const addToCart = (drink, quantity = 1) => {
+  const existingItem = cart.value.find((item) => item.id === drink.id);
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    cart.value.push({ ...drink, quantity });
+  }
 };
+
+const totalPrice = computed(() =>
+  cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+);
 
 const removeFromCart = (id) => {
   cart.value = cart.value.filter((item) => item.id !== id);
 };
-
-const totalPrice = computed(() => cart.value.reduce((sum, item) => sum + item.price, 0));
 
 const checkout = async () => {
   try {
@@ -147,7 +163,9 @@ const checkout = async () => {
   }
 };
 
-onMounted(fetchDrinks);
+onMounted(() => {
+  fetchDrinks();
+});
 </script>
 
 <style scoped>
@@ -300,6 +318,18 @@ body, .order-page {
   font-weight: bold;
   color: #ff6600;
   margin-bottom: 15px;
+}
+.quantity-selector {
+  margin-bottom: 10px;
+}
+.quantity-selector label {
+  margin-right: 5px;
+  font-weight: bold;
+}
+.quantity-selector input {
+  width: 50px;
+  padding: 5px;
+  text-align: center;
 }
 .cart-section {
   background: #e6f7ff;
