@@ -43,6 +43,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // 啟用 CORS
+app.UseRouting();
 app.UseCors("AllowFrontend");
 
 // Log actual DB path for debugging
