@@ -89,14 +89,18 @@ namespace DrinkShop.Api.Controllers
                 var cartItem = items.FirstOrDefault(i => i.Id == drink.Id);
                 if (cartItem != null)
                 {
-                    drink.Stock -= 1; // 根據購物車項目的數量減少庫存
+                    if (cartItem.Quantity > drink.Stock)
+                    {
+                        return BadRequest(new { message = $"飲品 {drink.Name} 庫存不足，無法完成訂單。" });
+                    }
+                    drink.Stock -= cartItem.Quantity; // 根據購物車項目的數量減少庫存
                 }
             }
 
             await _service.UpdateDrinksAsync(drinks);
 
             // 計算總金額
-            decimal totalAmount = items.Sum(item => item.Price);
+            decimal totalAmount = items.Sum(item => item.Price * item.Quantity);
 
             // 返回成功訊息
             return Ok(new { message = "結帳成功！", totalAmount, data = drinks });
