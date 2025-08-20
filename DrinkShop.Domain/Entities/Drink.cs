@@ -23,7 +23,7 @@ namespace DrinkShop.Domain.Entities
         /// 庫存數量
         /// </summary>
         public int Stock { get; set; }
-
+      
         /// <summary>
         /// 用於前端傳遞的臨時數據
         /// </summary>
