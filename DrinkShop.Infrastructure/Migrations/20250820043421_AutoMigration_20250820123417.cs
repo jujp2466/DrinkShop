@@ -5,7 +5,7 @@
 namespace DrinkShop.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AutoMigration_20250819214700 : Migration
+    public partial class AutoMigration_20250820123417 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

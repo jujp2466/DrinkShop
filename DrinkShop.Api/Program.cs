@@ -36,7 +36,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IDrinkService, DrinkService>();
 builder.Services.AddScoped<IDrinkRepository, DrinkRepository>();
 builder.Services.AddDbContext<DrinkShopDbContext>(options =>
-    options.UseSqlite($"Data Source={dbFilePath}"));
+    options.UseSqlite($"Data Source={dbFilePath}", b => b.MigrationsAssembly("DrinkShop.Infrastructure")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -79,5 +79,11 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate(); // 如果資料表不存在就自動建立
 }
 // ===============================================
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DrinkShopDbContext>();
+    db.Database.ExecuteSqlRaw("DELETE FROM __EFMigrationsLock;");
+}
 
 app.Run();

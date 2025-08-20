@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrinkShop.Infrastructure.Migrations
 {
     [DbContext(typeof(DrinkShopDbContext))]
-    [Migration("20250819134704_AutoMigration_20250819214700")]
-    partial class AutoMigration_20250819214700
+    [Migration("20250820043421_AutoMigration_20250820123417")]
+    partial class AutoMigration_20250820123417
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

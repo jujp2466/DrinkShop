@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrinkShop.Infrastructure.Migrations
 {
     [DbContext(typeof(DrinkShopDbContext))]
-    [Migration("20250813021612_InitialCreate")]
+    [Migration("20250820015435_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -31,6 +31,9 @@ namespace DrinkShop.Infrastructure.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Stock")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

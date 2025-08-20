@@ -365,6 +365,8 @@ FodyWeavers.xsd
 # SQLite database files
 *.db
 *.sqlite
+*.db-shm
+*.db-wal
 
 # Node.js dependencies
 node_modules/
