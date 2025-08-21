@@ -20,7 +20,11 @@ builder.Services.AddCors(options =>
 
 // ====== 設定 SQLite DB 路徑到應用程式內容根底下的 data 資料夾（避免不同工作目錄造成不同 DB） ======
 var contentRoot = builder.Environment.ContentRootPath; // 明確使用應用程式內容根路徑
-var defaultDataPath = Path.Combine(contentRoot, "data");
+// 如果在 Azure App Service 上，系統會提供 HOME 環境變數，該路徑位於持久化儲存 (D:\home)，推薦把 DB 放在這裡以避免被部署覆寫。
+var homeEnv = Environment.GetEnvironmentVariable("HOME");
+string defaultDataPath = !string.IsNullOrEmpty(homeEnv)
+    ? Path.Combine(homeEnv, "data")
+    : Path.Combine(contentRoot, "data");
 var defaultDbPath = Path.Combine(defaultDataPath, "drinkshop.db");
 // 優先使用環境變數 DB_PATH（可在 Azure App Settings 設定），否則使用預設路徑
 var dbFilePath = Environment.GetEnvironmentVariable("DB_PATH") ?? defaultDbPath;
