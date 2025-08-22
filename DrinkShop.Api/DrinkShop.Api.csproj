@@ -26,9 +26,4 @@
     <ProjectReference Include="..\DrinkShop.Infrastructure\DrinkShop.Infrastructure.csproj" />
   </ItemGroup>
 
-  <!-- Ensure tools scripts under wwwroot are published -->
-  <ItemGroup>
-    <Content Include="wwwroot\tools\**\*" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
-
 </Project>
