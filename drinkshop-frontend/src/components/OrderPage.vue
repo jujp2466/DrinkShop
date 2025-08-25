@@ -1,16 +1,15 @@
 <template>
   <div class="order-page">
     <header class="order-header">
-      <div class="logo">清涼飲品</div>
+      <div class="logo">淼淼飲品</div>
       <p>您的最佳飲料選擇</p>
     </header>
     <nav class="order-nav">
       <ul>
         <li><a href="#home">首頁</a></li>
-        <li><a href="#products">產品</a></li>
         <li><a href="#about">關於我們</a></li>
         <li><a href="#contact">聯絡我們</a></li>
-        <li><a href="/drinkcrud">管理菜單</a></li> <!-- 新增的連結 -->
+  <li><router-link to="/drinkcrud">管理菜單</router-link></li>
       </ul>
     </nav>
     <section id="home" class="hero">
@@ -31,6 +30,7 @@
             <h3 class="product-title">{{ drink.name }}</h3>
             <p class="product-description">{{ drink.description || '新鮮美味，清涼解渴' }}</p>
             <p class="product-price">NT$ {{ drink.price }}</p>
+            <p class="product-purchased">購買次數: {{ (drink.PurchaseCount ?? drink.purchaseCount) ?? 0 }}</p>
             <div class="quantity-selector">
               <label for="quantity">數量：</label>
               <input type="number" v-model.number="quantities[drink.id]" min="1" :id="'quantity-' + drink.id" />
@@ -46,6 +46,7 @@
         <li v-for="item in cart" :key="item.id" class="cart-item">
           <span>{{ item.name }}</span>
           <span>數量: {{ item.quantity }}</span> <!-- 顯示數量 -->
+          <span>購買次數: {{ (item.PurchaseCount ?? item.purchaseCount) ?? 0 }}</span>
           <span>NT$ {{ item.price * item.quantity }}</span> <!-- 更新金額計算 -->
           <button class="delete-btn" @click="removeFromCart(item.id)">移除</button>
         </li>
@@ -81,12 +82,12 @@
       <div class="footer-content">
         <div class="footer-section">
           <h3 class="footer-title">關於我們</h3>
-          <p>清涼飲品成立於2020年，致力於提供最優質的飲品服務，讓每位顧客都能享受到健康美味的飲品體驗。</p>
+          <p>淼淼飲品成立於2025年，致力於提供最優質的飲品服務，讓每位顧客都能享受到健康美味的飲品體驗。</p>
         </div>
         <div class="footer-section">
           <h3 class="footer-title">聯絡資訊</h3>
-          <p>地址：台北市中山區中山北路123號</p>
-          <p>電話：02-1234-5678</p>
+          <p>地址：基隆中山區中山路123號</p>
+          <p>電話：0912-345-678</p>
           <p>Email：info@cooldrinks.com</p>
         </div>
         <div class="footer-section">
@@ -98,14 +99,13 @@
           <h3 class="footer-title">快速連結</h3>
           <div class="footer-links">
             <a href="#home">首頁</a>
-            <a href="#products">產品</a>
             <a href="#about">關於我們</a>
             <a href="#contact">聯絡我們</a>
           </div>
         </div>
       </div>
       <div class="copyright">
-        <p>&copy; 2023 清涼飲品 版權所有</p>
+        <p>&copy; 2025 淼淼飲品 版權所有</p>
       </div>
     </footer>
   </div>
@@ -168,7 +168,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style>
 /* 參考 cursor.html 設計，優化美觀 */
 * {
   margin: 0;

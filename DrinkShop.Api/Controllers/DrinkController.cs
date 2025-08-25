@@ -94,6 +94,8 @@ namespace DrinkShop.Api.Controllers
                         return BadRequest(new { message = $"飲品 {drink.Name} 庫存不足，無法完成訂單。" });
                     }
                     drink.Stock -= cartItem.Quantity; // 根據購物車項目的數量減少庫存
+                    // 強型別累計 PurchaseCount
+                    drink.PurchaseCount += cartItem.Quantity;
                 }
             }
 

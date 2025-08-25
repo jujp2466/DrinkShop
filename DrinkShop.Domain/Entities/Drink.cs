@@ -23,11 +23,18 @@ namespace DrinkShop.Domain.Entities
         /// 庫存數量
         /// </summary>
         public int Stock { get; set; }
-      
+
+    /// <summary>
+    /// 商品被購買的總次數（累計數量）
+    /// </summary>
+    public int PurchaseCount { get; set; } = 0;
+
         /// <summary>
         /// 用於前端傳遞的臨時數據
         /// </summary>
         [NotMapped]
         public int Quantity { get; set; }
+        
+        
     }
 }

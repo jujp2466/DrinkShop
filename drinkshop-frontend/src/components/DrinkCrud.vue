@@ -1,30 +1,70 @@
 <template>
-  <div class="drinkshop-container">
-    <h1 class="title">Drink Shop 菜單管理</h1>
-    <form class="drink-form" @submit.prevent="addDrink">
-      <div class="form-group">
-        <label>飲品名稱</label>
-        <input v-model="newDrink.name" placeholder="請輸入飲品名稱" required />
+  <div class="order-page">
+    <header class="order-header">
+      <div class="logo">淼淼飲品 - 管理</div>
+      <p>你的後台管理介面</p>
+    </header>
+    <nav class="order-nav">
+      <ul>
+        <li><router-link to="/">產品選購</router-link></li>
+        <li><a href="#about">關於我們</a></li>
+        <li><a href="#contact">聯絡我們</a></li>
+        <li><router-link to="/drinkcrud">管理菜單</router-link></li>
+      </ul>
+    </nav>
+
+    <section id="products" class="container">
+      <h2 class="section-title">菜單管理</h2>
+      <div class="products">
+        <div class="drinkshop-container">
+          <form class="drink-form" @submit.prevent="addDrink">
+            <div class="form-group">
+              <label>飲品名稱</label>
+              <input v-model="newDrink.name" placeholder="請輸入飲品名稱" required />
+            </div>
+            <div class="form-group">
+              <label>價格</label>
+              <input v-model.number="newDrink.price" placeholder="請輸入價格" type="number" min="0" required />
+            </div>
+            <div class="form-group">
+              <label>庫存</label>
+              <input v-model.number="newDrink.stock" placeholder="請輸入庫存" type="number" min="0" required />
+            </div>
+            <button class="add-btn" type="submit">新增飲品</button>
+          </form>
+          <div v-if="successMsg" class="success-msg">{{ successMsg }}</div>
+          <ul class="drink-list">
+            <li v-for="d in drinks" :key="d.id" class="drink-item">
+              <div>
+                <span class="drink-name">{{ d.name }}</span>
+                <span class="drink-price">${{ d.price }}</span>
+                <span class="drink-stock">庫存: {{ d.stock }}</span>
+                <span class="drink-purchased">購買次數: {{ (d.PurchaseCount ?? d.purchaseCount) ?? 0 }}</span>
+              </div>
+              <div>
+                <button class="delete-btn" @click="removeDrink(d.id)">刪除</button>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="form-group">
-        <label>價格</label>
-        <input v-model.number="newDrink.price" placeholder="請輸入價格" type="number" min="0" required />
+    </section>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3 class="footer-title">關於我們</h3>
+          <p>淼淼飲品成立於2025年，致力於提供最優質的飲品服務。</p>
+        </div>
+        <div class="footer-section">
+          <h3 class="footer-title">聯絡資訊</h3>
+          <p>電話：0912-345-678</p>
+        </div>
       </div>
-      <div class="form-group">
-        <label>庫存</label>
-        <input v-model.number="newDrink.stock" placeholder="請輸入庫存" type="number" min="0" required />
+      <div class="copyright">
+        <p>&copy; 2025 淼淼飲品 版權所有</p>
       </div>
-      <button class="add-btn" type="submit">新增飲品</button>
-    </form>
-    <div v-if="successMsg" class="success-msg">{{ successMsg }}</div>
-    <ul class="drink-list">
-      <li v-for="d in drinks" :key="d.id" class="drink-item">
-        <span class="drink-name">{{ d.name }}</span>
-        <span class="drink-price">${{ d.price }}</span>
-        <span class="drink-stock">庫存: {{ d.stock }}</span>
-        <button class="delete-btn" @click="removeDrink(d.id)">刪除</button>
-      </li>
-    </ul>
+    </footer>
   </div>
 </template>
 <script setup>
@@ -48,7 +88,6 @@ const addDrink = async () => {
     await api.post('/drink', newDrink.value);
     successMsg.value = '新增成功！';
     setTimeout(() => (successMsg.value = ''), 1500);
-    newDrink.value = { name: '', price: 0, stock: 0 };
     fetchDrinks();
   } catch {
     successMsg.value = '新增失敗，請檢查後端 API';
