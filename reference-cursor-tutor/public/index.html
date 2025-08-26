@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清涼飲品 - 您的最佳飲料選擇</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">清涼飲品</div>
+        <p>您的最佳飲料選擇</p>
+        <div class="user-actions">
+            <div id="userInfo" style="display: none;">
+                <span id="username"></span>
+                <button id="logoutBtn" class="btn-small">登出</button>
+            </div>
+            <div id="loginSection">
+                <button id="loginBtn" class="btn-small">登入</button>
+                <button id="registerBtn" class="btn-small">註冊</button>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <ul>
+            <li><a href="#home">首頁</a></li>
+            <li><a href="#products">產品</a></li>
+            <li><a href="#about">關於我們</a></li>
+            <li><a href="#contact">聯絡我們</a></li>
+            <li><a href="#" id="cartBtn" class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cartCount" class="cart-count">0</span>
+            </a></li>
+        </ul>
+    </nav>
+    
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>清涼一夏，暢快每一天</h1>
+            <p>我們提供最優質的飲品，使用天然食材，讓您享受健康與美味的完美結合。</p>
+            <a href="#products" class="btn">立即選購</a>
+        </div>
+    </section>
+    
+    <section id="products" class="container">
+        <h2 class="section-title">熱門飲品</h2>
+        <div class="products" id="productsContainer">
+            <!-- 產品將通過JavaScript動態加載 -->
+        </div>
+    </section>
+    
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">為什麼選擇我們</h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">🍃</div>
+                    <h3>天然食材</h3>
+                    <p>我們只使用最優質的天然食材，不添加人工色素和防腐劑。</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🥤</div>
+                    <h3>獨特配方</h3>
+                    <p>每一款飲品都經過精心調配，口感獨特，令人回味無窮。</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🚚</div>
+                    <h3>快速配送</h3>
+                    <p>線上訂購後30分鐘內送達，保證新鮮美味。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">顧客評價</h2>
+            <div class="testimonial-list">
+                <div class="testimonial-item">
+                    <p class="testimonial-text">「清涼飲品的珍珠奶茶是我喝過最好喝的！珍珠Q彈有嚼勁，奶茶香濃不膩口，每天都想喝一杯。」</p>
+                    <p class="testimonial-author">- 陳小姐</p>
+                </div>
+                
+                <div class="testimonial-item">
+                    <p class="testimonial-text">「他們的水果茶使用新鮮水果，喝得到真材實料，完全不像其他店家那樣只有香精味。強力推薦！」</p>
+                    <p class="testimonial-author">- 林先生</p>
+                </div>
+                
+                <div class="testimonial-item">
+                    <p class="testimonial-text">「下班後最期待的就是點一杯清涼飲品的抹茶拿鐵，濃郁的抹茶香氣配上滑順的鮮奶，疲勞一掃而空。」</p>
+                    <p class="testimonial-author">- 王小姐</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">關於我們</h3>
+                <p>清涼飲品成立於2020年，致力於提供最優質的飲品服務，讓每位顧客都能享受到健康美味的飲品體驗。</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-title">聯絡資訊</h3>
+                <p>地址：台北市中山區中山北路123號</p>
+                <p>電話：02-1234-5678</p>
+                <p>Email：info@cooldrinks.com</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-title">營業時間</h3>
+                <p>週一至週五：10:00 - 21:00</p>
+                <p>週六至週日：11:00 - 22:00</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-title">快速連結</h3>
+                <div class="footer-links">
+                    <a href="#home">首頁</a>
+                    <a href="#products">產品</a>
+                    <a href="#about">關於我們</a>
+                    <a href="#contact">聯絡我們</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2023 清涼飲品 版權所有</p>
+        </div>
+    </footer>
+
+    <!-- 登入模態框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>用戶登入</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">用戶名</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密碼</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn">登入</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 註冊模態框 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>用戶註冊</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerUsername">用戶名</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">電子郵件</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密碼</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn">註冊</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 購物車模態框 -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content cart-modal">
+            <span class="close">&times;</span>
+            <h2>購物車</h2>
+            <div id="cartItems" class="cart-items">
+                <!-- 購物車項目將在這裡顯示 -->
+            </div>
+            <div class="cart-total">
+                <h3>總計: NT$ <span id="cartTotal">0</span></h3>
+            </div>
+            <div class="cart-actions">
+                <button id="clearCart" class="btn-secondary">清空購物車</button>
+                <button id="checkoutBtn" class="btn">結帳</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
