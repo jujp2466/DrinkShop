@@ -90,7 +90,7 @@ export default {
   setup() {
     // 全局變量
     const currentUser = ref(null);
-    const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5249/api/v1' : '/api/v1';
+  // 使用共享 axios 實例 (由子組件引入 `src/api.js`)，不在此組件管理 apiBase
     
     // UI狀態
     const sidebarOpen = ref(false);
@@ -203,8 +203,7 @@ export default {
       });
     });
     
-    return {
-      apiBase,
+  return {
       currentUser,
       sidebarOpen,
       activeTab,

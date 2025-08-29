@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-
-const API_BASE_URL = 'http://localhost:5249/api/v1'
+import api from '../api'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -46,7 +45,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
       
       try {
-        const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials)
+  const response = await api.post(`/auth/login`, credentials)
         
         // 根據後端實際的響應格式處理數據
         const { data } = response.data
@@ -84,7 +83,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
       
       try {
-        await axios.post(`${API_BASE_URL}/auth/register`, userData)
+  await api.post(`/auth/register`, userData)
         
         // 註冊成功後自動登入
         return await this.login({

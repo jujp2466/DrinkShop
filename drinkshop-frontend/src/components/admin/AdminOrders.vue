@@ -245,6 +245,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import api from '../../api'
 
 // 響應式數據
 const loading = ref(true)
@@ -261,8 +262,8 @@ const showStatusModal = ref(false)
 const currentOrder = ref({})
 const newStatus = ref('')
 
-// API 基礎 URL
-const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5249/api/v1' : '/api/v1'
+// 使用共享 axios 實例
+const apiClient = api
 
 // 計算屬性
 const pendingCount = computed(() => 
@@ -291,20 +292,10 @@ const paginatedOrders = computed(() => {
 const fetchApi = async (endpoint, options = {}) => {
   try {
     const token = localStorage.getItem('token')
-    const response = await fetch(`${apiBase}${endpoint}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    return await response.json()
+    const headers = { ...(options.headers || {}) }
+    if (token) headers.Authorization = `Bearer ${token}`
+    const response = await apiClient.request({ url: endpoint, ...options, headers })
+    return response.data
   } catch (error) {
     console.error(`API call failed for ${endpoint}:`, error)
     throw error
