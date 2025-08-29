@@ -24,7 +24,7 @@
       <div class="products">
         <div v-for="drink in drinks" :key="drink.id" class="product-card">
           <div class="product-image">
-            <img :src="drink.image || 'https://images.unsplash.com/photo-1544145945-f90425340c7e'" :alt="drink.name" />
+            <img :src="imageSrc(drink)" :alt="drink.name" />
           </div>
           <div class="product-info">
             <h3 class="product-title">{{ drink.name }}</h3>
@@ -166,6 +166,20 @@ const checkout = async () => {
 onMounted(() => {
   fetchDrinks();
 });
+
+// 統一圖片來源處理：支援 imageUrl / image / 相對路徑 與預設圖；茶類優先用茶圖
+const imageSrc = (item) => {
+  const candidate = item?.imageUrl || item?.image || ''
+  const name = (item?.name || '').toLowerCase()
+  const category = (item?.category || '').toLowerCase()
+  const isTea = /茶|tea/.test(name) || /茶|tea/.test(category)
+  if (!candidate) return isTea
+    ? 'https://images.unsplash.com/photo-1488900128323-21503983a07e'
+    : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836'
+  if (candidate.startsWith('http://') || candidate.startsWith('https://')) return candidate
+  if (candidate.startsWith('/')) return candidate
+  return candidate
+}
 </script>
 
 <style>
@@ -214,7 +228,7 @@ body, .order-page {
   color: #99ccff;
 }
 .hero {
-  background-image: url('https://images.unsplash.com/photo-1544145945-f90425340c7e');
+  background-image: url('https://images.unsplash.com/photo-1509475826633-fed577a2c71b');
   background-size: cover;
   background-position: center;
   height: 400px;

@@ -1,204 +1,191 @@
-# 清涼飲品 - 現代化飲料銷售網站
+# 清涼飲品銷售網站 - Vue 3 + Vite 版本
 
-一個完整的飲料銷售網站，包含前端展示和後台管理系統。
+一個現代化的飲料銷售網站，使用 Vue 3 + Vite 前端框架和 Node.js + Express 後端 API。
 
-## 功能特色
+## 🚀 技術棧
 
-### 前端功能
-- 🛍️ **購物車系統** - 完整的購物車功能，支持數量調整和商品管理
-- 👤 **用戶認證** - 用戶註冊、登入、登出功能
-- 📱 **響應式設計** - 完美適配桌面和移動設備
-- 🎨 **現代化UI** - 美觀的界面設計，流暢的動畫效果
-- 💳 **訂單系統** - 完整的下單流程
+### 前端 (Vue 3 + Vite)
+- **Vue 3** - 現代化的前端框架
+- **Vite** - 快速的構建工具
+- **Vue Router 4** - 官方路由管理器
+- **Pinia** - 狀態管理庫
+- **Axios** - HTTP 客戶端
+- **CSS3** - 現代化樣式
 
-### 後台管理系統
-- 📊 **儀表板** - 實時統計數據展示
-- 📦 **產品管理** - 新增、編輯、刪除產品，支持圖片上傳
-- 📋 **訂單管理** - 查看訂單詳情，更新訂單狀態
-- 👥 **用戶管理** - 管理用戶帳戶和權限
-- 🔍 **篩選搜尋** - 強大的篩選和搜尋功能
+### 後端 (Node.js + Express)
+- **Node.js** - JavaScript 運行時
+- **Express.js** - Web 應用框架
+- **SQLite3** - 輕量級數據庫
+- **JWT** - 身份驗證
+- **Multer** - 文件上傳
+- **bcryptjs** - 密碼加密
 
-## 技術架構
+## ✨ 功能特色
 
-- **後端**: Node.js + Express.js
-- **數據庫**: SQLite3
-- **前端**: 原生JavaScript + HTML5 + CSS3
-- **認證**: JWT (JSON Web Token)
-- **文件上傳**: Multer
-- **密碼加密**: bcryptjs
+### 🛒 前端購物功能
+- **響應式設計** - 支援桌面和移動設備
+- **產品展示** - 美觀的產品卡片佈局
+- **用戶認證** - 登入/註冊系統
+- **購物車** - 完整的購物車功能
+- **模態框** - 現代化的用戶界面
 
-## 安裝說明
+### 🔧 後台管理系統
+- **儀表板** - 數據統計和概覽
+- **產品管理** - 新增、編輯、刪除產品
+- **訂單管理** - 查看和更新訂單狀態
+- **用戶管理** - 查看註冊用戶
+- **文件上傳** - 產品圖片上傳
 
-### 前置需求
-- Node.js (版本 14 或以上)
-- npm 或 yarn
+### 🔐 安全功能
+- **JWT 認證** - 安全的身份驗證
+- **密碼加密** - bcrypt 密碼哈希
+- **權限控制** - 管理員和用戶權限分離
+- **API 保護** - 受保護的後端 API
 
-### 安裝步驟
+## 📦 安裝和運行
 
-1. **克隆項目**
+### 1. 克隆項目
 ```bash
 git clone <repository-url>
 cd beverage-store
 ```
 
-2. **安裝依賴**
+### 2. 安裝依賴
 ```bash
 npm install
 ```
 
-3. **啟動服務器**
+### 3. 啟動開發服務器
+
+#### 方法一：使用啟動腳本（推薦）
 ```bash
+start-vue.bat
+```
+
+#### 方法二：手動啟動
+```bash
+# 終端 1：啟動後端服務器
 npm start
+
+# 終端 2：啟動前端開發服務器
+npm run dev:frontend
 ```
 
-4. **開發模式**
-```bash
-npm run dev
-```
+### 4. 訪問網站
+- **前端網站**: http://localhost:5173
+- **後台管理**: http://localhost:5173/admin
+- **API 服務器**: http://localhost:3000
 
-## 使用說明
+## 🔑 默認帳戶
 
-### 訪問網站
-- 前端網站: http://localhost:3000
-- 後台管理: http://localhost:3000/admin
+### 管理員帳戶
+- **用戶名**: `admin`
+- **密碼**: `admin123`
 
-### 默認管理員帳戶
-- 用戶名: `admin`
-- 密碼: `admin123`
-
-### 功能演示
-
-#### 前端購物流程
-1. 瀏覽產品目錄
-2. 將商品加入購物車
-3. 調整商品數量
-4. 登入或註冊帳戶
-5. 完成結帳
-
-#### 後台管理
-1. 使用管理員帳戶登入後台
-2. 在儀表板查看統計數據
-3. 管理產品庫存和價格
-4. 處理客戶訂單
-5. 管理用戶帳戶
-
-## 項目結構
+## 📁 項目結構
 
 ```
 beverage-store/
-├── server.js              # 主服務器文件
+├── src/                    # Vue 3 源代碼
+│   ├── components/         # Vue 組件
+│   │   ├── LoginModal.vue
+│   │   ├── RegisterModal.vue
+│   │   ├── CartModal.vue
+│   │   └── ProductModal.vue
+│   ├── views/             # 頁面組件
+│   │   ├── Home.vue       # 首頁
+│   │   ├── Admin.vue      # 後台管理
+│   │   ├── Login.vue      # 登入頁面
+│   │   └── Register.vue   # 註冊頁面
+│   ├── stores/            # Pinia 狀態管理
+│   │   ├── auth.js        # 認證狀態
+│   │   ├── cart.js        # 購物車狀態
+│   │   └── products.js    # 產品狀態
+│   ├── utils/             # 工具函數
+│   │   └── api.js         # API 配置
+│   ├── assets/            # 靜態資源
+│   │   └── main.css       # 主樣式
+│   ├── router/            # 路由配置
+│   │   └── index.js
+│   ├── App.vue            # 根組件
+│   └── main.js            # 應用入口
+├── server.js              # Express 後端服務器
+├── vite.config.js         # Vite 配置
 ├── package.json           # 項目配置
-├── README.md             # 項目說明
-├── public/               # 前端文件
-│   ├── index.html        # 主頁面
-│   ├── admin.html        # 後台管理頁面
-│   ├── styles.css        # 前端樣式
-│   ├── admin-styles.css  # 後台樣式
-│   ├── app.js           # 前端JavaScript
-│   └── admin.js         # 後台JavaScript
-├── uploads/              # 上傳文件目錄
-└── beverage_store.db     # SQLite數據庫文件
+├── index.html             # HTML 模板
+├── uploads/               # 上傳文件目錄
+└── beverage_store.db      # SQLite 數據庫
 ```
 
-## API 端點
+## 🔧 開發命令
 
-### 用戶認證
-- `POST /api/register` - 用戶註冊
-- `POST /api/login` - 用戶登入
+```bash
+# 開發模式
+npm run dev:frontend    # 啟動前端開發服務器
+npm run dev             # 啟動後端開發服務器
 
-### 產品管理
+# 構建
+npm run build           # 構建生產版本
+npm run preview         # 預覽構建結果
+
+# 生產模式
+npm start               # 啟動生產服務器
+```
+
+## 🌐 API 端點
+
+### 認證相關
+- `POST /api/auth/login` - 用戶登入
+- `POST /api/auth/register` - 用戶註冊
+- `GET /api/auth/me` - 獲取當前用戶信息
+
+### 產品相關
 - `GET /api/products` - 獲取所有產品
 - `GET /api/products/:id` - 獲取單個產品
-- `POST /api/admin/products` - 新增產品 (管理員)
-- `PUT /api/admin/products/:id` - 更新產品 (管理員)
-- `DELETE /api/admin/products/:id` - 刪除產品 (管理員)
+- `POST /api/products` - 新增產品（管理員）
+- `PUT /api/products/:id` - 更新產品（管理員）
+- `DELETE /api/products/:id` - 刪除產品（管理員）
 
-### 訂單管理
+### 訂單相關
 - `POST /api/orders` - 創建訂單
 - `GET /api/orders` - 獲取訂單列表
-- `PUT /api/admin/orders/:id/status` - 更新訂單狀態 (管理員)
+- `PUT /api/admin/orders/:id/status` - 更新訂單狀態（管理員）
 
-## 數據庫結構
+## 🎨 設計特色
 
-### 用戶表 (users)
-- id, username, password, email, role, created_at
+### 視覺設計
+- **現代化 UI** - 清爽的藍色主題
+- **響應式佈局** - 適配各種屏幕尺寸
+- **動畫效果** - 平滑的過渡動畫
+- **用戶友好** - 直觀的操作界面
 
-### 產品表 (products)
-- id, name, description, price, category, image_url, stock, is_active, created_at
+### 用戶體驗
+- **快速加載** - Vite 的快速熱重載
+- **無縫導航** - Vue Router 的 SPA 體驗
+- **狀態管理** - Pinia 的響應式狀態
+- **錯誤處理** - 完善的錯誤提示
 
-### 訂單表 (orders)
-- id, user_id, total_amount, status, created_at
+## 🚀 部署
 
-### 訂單詳情表 (order_items)
-- id, order_id, product_id, quantity, price
-
-## 自定義配置
-
-### 環境變量
-創建 `.env` 文件來配置環境變量：
-
-```env
-PORT=3000
-JWT_SECRET=your-secret-key
-```
-
-### 數據庫配置
-項目使用 SQLite 數據庫，數據庫文件會在首次運行時自動創建。
-
-## 部署說明
-
-### 本地部署
-1. 確保已安裝 Node.js
+### 開發環境
+1. 確保已安裝 Node.js (v16+)
 2. 運行 `npm install` 安裝依賴
-3. 運行 `npm start` 啟動服務器
+3. 使用 `start-vue.bat` 或手動啟動服務器
 
-### 生產環境部署
-1. 設置環境變量
-2. 使用 PM2 或類似工具管理進程
-3. 配置反向代理 (如 Nginx)
-4. 設置 SSL 證書
+### 生產環境
+1. 運行 `npm run build` 構建前端
+2. 將 `dist` 目錄內容部署到 Web 服務器
+3. 配置後端服務器運行 `npm start`
 
-## 開發指南
+## 🤝 貢獻
 
-### 添加新功能
-1. 在 `server.js` 中添加新的 API 端點
-2. 更新前端 JavaScript 文件
-3. 修改相應的 HTML 和 CSS 文件
+歡迎提交 Issue 和 Pull Request！
 
-### 數據庫遷移
-項目使用 SQLite，數據庫結構在 `server.js` 中定義。如需修改，請更新相應的 CREATE TABLE 語句。
-
-## 故障排除
-
-### 常見問題
-
-1. **端口被佔用**
-   - 修改 `.env` 文件中的 PORT 變量
-   - 或終止佔用端口的進程
-
-2. **數據庫錯誤**
-   - 刪除 `beverage_store.db` 文件重新創建
-   - 檢查數據庫權限
-
-3. **文件上傳失敗**
-   - 確保 `uploads` 目錄存在且有寫入權限
-   - 檢查文件大小限制
-
-## 貢獻指南
-
-1. Fork 項目
-2. 創建功能分支
-3. 提交更改
-4. 發起 Pull Request
-
-## 授權
+## 📄 許可證
 
 MIT License
 
-## 聯繫方式
-
-如有問題或建議，請聯繫開發團隊。
-
 ---
 
-**享受您的飲料購物體驗！** 🥤
+**享受您的清涼飲品！** 🥤
+

@@ -125,30 +125,10 @@ const requireAdmin = (req, res, next) => {
 
 // API 路由
 
-// 用戶註冊
-app.post('/api/register', async (req, res) => {
-    const { username, password, email } = req.body;
-    
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        db.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
-            [username, hashedPassword, email],
-            function(err) {
-                if (err) {
-                    if (err.message.includes('UNIQUE constraint failed')) {
-                        return res.status(400).json({ error: '用戶名或郵箱已存在' });
-                    }
-                    return res.status(500).json({ error: '註冊失敗' });
-                }
-                res.json({ message: '註冊成功', userId: this.lastID });
-            });
-    } catch (error) {
-        res.status(500).json({ error: '服務器錯誤' });
-    }
-});
+
 
 // 用戶登錄
-app.post('/api/login', (req, res) => {
+app.post('/api/auth/login', (req, res) => {
     const { username, password } = req.body;
     
     db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
@@ -165,6 +145,54 @@ app.post('/api/login', (req, res) => {
         );
         
         res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+    });
+});
+
+// 獲取當前用戶信息
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+    db.get('SELECT id, username, email, role, created_at FROM users WHERE id = ?', [req.user.id], (err, user) => {
+        if (err) return res.status(500).json({ error: '獲取用戶信息失敗' });
+        if (!user) return res.status(404).json({ error: '用戶不存在' });
+        res.json(user);
+    });
+});
+
+// 用戶註冊
+app.post('/api/auth/register', async (req, res) => {
+    const { username, email, password } = req.body;
+    
+    // 檢查用戶名是否已存在
+    db.get('SELECT id FROM users WHERE username = ?', [username], async (err, existingUser) => {
+        if (err) return res.status(500).json({ error: '服務器錯誤' });
+        if (existingUser) return res.status(400).json({ error: '用戶名已存在' });
+        
+        // 檢查郵箱是否已存在
+        db.get('SELECT id FROM users WHERE email = ?', [email], async (err, existingEmail) => {
+            if (err) return res.status(500).json({ error: '服務器錯誤' });
+            if (existingEmail) return res.status(400).json({ error: '郵箱已存在' });
+            
+            // 加密密碼
+            const hashedPassword = await bcrypt.hash(password, 10);
+            
+            // 創建新用戶
+            db.run('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
+                [username, email, hashedPassword, 'user'],
+                function(err) {
+                    if (err) return res.status(500).json({ error: '註冊失敗' });
+                    
+                    // 生成 JWT token
+                    const token = jwt.sign(
+                        { id: this.lastID, username, role: 'user' },
+                        process.env.JWT_SECRET || 'your-secret-key',
+                        { expiresIn: '24h' }
+                    );
+                    
+                    res.json({ 
+                        token, 
+                        user: { id: this.lastID, username, email, role: 'user' } 
+                    });
+                });
+        });
     });
 });
 
@@ -186,7 +214,7 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // 管理員：添加產品
-app.post('/api/admin/products', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+app.post('/api/products', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
     const { name, description, price, category, stock } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
     
@@ -194,12 +222,17 @@ app.post('/api/admin/products', authenticateToken, requireAdmin, upload.single('
         [name, description, price, category, imageUrl, stock],
         function(err) {
             if (err) return res.status(500).json({ error: '添加產品失敗' });
-            res.json({ message: '產品添加成功', id: this.lastID });
+            
+            // 返回新創建的產品信息
+            db.get('SELECT * FROM products WHERE id = ?', [this.lastID], (err, product) => {
+                if (err) return res.status(500).json({ error: '獲取產品信息失敗' });
+                res.json(product);
+            });
         });
 });
 
 // 管理員：更新產品
-app.put('/api/admin/products/:id', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+app.put('/api/products/:id', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
     const { name, description, price, category, stock, is_active } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
     
@@ -216,12 +249,17 @@ app.put('/api/admin/products/:id', authenticateToken, requireAdmin, upload.singl
     
     db.run(query, params, function(err) {
         if (err) return res.status(500).json({ error: '更新產品失敗' });
-        res.json({ message: '產品更新成功' });
+        
+        // 返回更新後的產品信息
+        db.get('SELECT * FROM products WHERE id = ?', [req.params.id], (err, product) => {
+            if (err) return res.status(500).json({ error: '獲取產品信息失敗' });
+            res.json(product);
+        });
     });
 });
 
 // 管理員：刪除產品
-app.delete('/api/admin/products/:id', authenticateToken, requireAdmin, (req, res) => {
+app.delete('/api/products/:id', authenticateToken, requireAdmin, (req, res) => {
     db.run('DELETE FROM products WHERE id = ?', [req.params.id], function(err) {
         if (err) return res.status(500).json({ error: '刪除產品失敗' });
         res.json({ message: '產品刪除成功' });
@@ -277,15 +315,12 @@ app.put('/api/admin/orders/:id/status', authenticateToken, requireAdmin, (req, r
     });
 });
 
-// 前端路由
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+// 前端路由 - 支援 Vue Router history 模式
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
     console.log(`服務器運行在 http://localhost:${PORT}`);
 });
+
