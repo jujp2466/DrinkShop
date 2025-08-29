@@ -389,3 +389,6 @@ logs/
 # Test results
 TestResults/
 coverage/
+
+# Reference tutorial folder
+reference-cursor-tutor/

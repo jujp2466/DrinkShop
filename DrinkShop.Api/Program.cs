@@ -1,7 +1,4 @@
-using DrinkShop.Application.Interfaces;
-using DrinkShop.Application.Services;
 using DrinkShop.Infrastructure;
-using DrinkShop.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,13 +6,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins(
-            "http://localhost:5173",
-            "https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net",
-            "https://blue-island-07506ba00.1.azurestaticapps.net"
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod());
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            // 開發環境允許任意來源與方法，避免 Vite 動態埠（5173/5174/…）造成阻擋
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "http://localhost:5173",
+                    "https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net",
+                    "https://blue-island-07506ba00.1.azurestaticapps.net"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    });
 });
 
 // ====== 設定 SQLite DB 路徑到應用程式內容根底下的 data 資料夾（避免不同工作目錄造成不同 DB） ======
@@ -36,9 +45,7 @@ if (!Directory.Exists(dbFolder))
 
 // Add services to the container.
 builder.Services.AddControllers();
-// DI 註冊
-builder.Services.AddScoped<IDrinkService, DrinkService>();
-builder.Services.AddScoped<IDrinkRepository, DrinkRepository>();
+// DI 註冊（已移除舊的 Drink 服務/儲存庫）
 builder.Services.AddDbContext<DrinkShopDbContext>(options =>
     options.UseSqlite($"Data Source={dbFilePath}", b => b.MigrationsAssembly("DrinkShop.Infrastructure")));
 builder.Services.AddEndpointsApiExplorer();
@@ -73,7 +80,11 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     });
 }
 
-app.UseHttpsRedirection();
+// 僅在非開發環境啟用 HTTPS 轉址，避免本機只有 http 監聽時造成預檢/跨域被 307 轉址
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthorization();
 app.MapControllers();
 
@@ -82,6 +93,34 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DrinkShopDbContext>();
     db.Database.Migrate(); // 如果資料表不存在就自動建立
+    
+    // 確保有admin用戶
+    var adminUser = db.Users.FirstOrDefault(u => u.Username == "admin");
+    if (adminUser == null)
+    {
+        // 創建新的admin用戶
+        adminUser = new DrinkShop.Domain.Entities.User
+        {
+            Username = "admin",
+            Password = "admin123", // 生產環境應該使用加密
+            Email = "admin@drinkshop.com",
+            Role = "admin"
+        };
+        db.Users.Add(adminUser);
+        db.SaveChanges();
+        Console.WriteLine("Default admin user created: admin/admin123");
+    }
+    else if (adminUser.Role != "admin")
+    {
+        // 將現有用戶設置為admin
+        adminUser.Role = "admin";
+        db.SaveChanges();
+        Console.WriteLine($"User '{adminUser.Username}' role updated to admin");
+    }
+    else
+    {
+        Console.WriteLine($"Admin user '{adminUser.Username}' already exists");
+    }
 }
 // ===============================================
 
