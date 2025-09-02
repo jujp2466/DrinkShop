@@ -104,7 +104,7 @@
           <tbody>
             <tr v-for="order in filteredOrders" :key="order.id">
               <td>
-                <span class="order-id">#{{ order.id.slice(-8) }}</span>
+                <span class="order-id">#{{ String(order.id).slice(-8) }}</span>
               </td>
               <td>
                 <div class="customer-info">
@@ -159,7 +159,7 @@
     <div v-if="showOrderModal" class="modal-overlay" @click="closeOrderModal">
       <div class="modal" @click.stop>
         <div class="modal-header">
-          <h2>訂單詳情 #{{ selectedOrder?.id.slice(-8) }}</h2>
+          <h2>訂單詳情 #{{ String(selectedOrder?.id).slice(-8) }}</h2>
           <button @click="closeOrderModal" class="close-btn">
             <i class="fas fa-times"></i>
           </button>
@@ -229,6 +229,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import api from '@/api'
 
 const loading = ref(false)
 const orders = ref([])
@@ -265,7 +266,7 @@ const filteredOrders = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(order =>
-      order.id.toLowerCase().includes(query) ||
+      String(order.id).toLowerCase().includes(query) ||
       order.customerName.toLowerCase().includes(query) ||
       order.customerEmail.toLowerCase().includes(query)
     )
@@ -292,62 +293,35 @@ const formatDateTime = (dateString) => {
   })
 }
 
-const generateMockOrders = () => {
-  const orders = []
-  const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
-  const paymentMethods = ['credit-card', 'bank-transfer', 'cash-on-delivery']
-  const names = ['王小明', '李美玲', '張志偉', '陳雅芬', '林俊德', '黃淑芬', '劉建國', '吳佩蓉']
-  
-  for (let i = 0; i < 20; i++) {
-    const name = names[Math.floor(Math.random() * names.length)]
-    const status = statuses[Math.floor(Math.random() * statuses.length)]
-    const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)]
-    const itemCount = Math.floor(Math.random() * 5) + 1
-    const subtotal = Math.floor(Math.random() * 2000) + 300
-    const shippingFee = 60
-    
-    orders.push({
-      id: `order-${Date.now()}-${i}`,
-      customerName: name,
-      customerPhone: `09${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
-      customerEmail: `${name.replace(/[^\w]/g, '').toLowerCase()}@example.com`,
-      shippingAddress: `台北市信義區信義路五段${Math.floor(Math.random() * 999) + 1}號`,
-      totalAmount: subtotal + shippingFee,
-      shippingFee: shippingFee,
-      itemCount: itemCount,
-      status: status,
-      paymentMethod: paymentMethod,
-      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-      items: generateMockOrderItems(itemCount),
-      notes: Math.random() > 0.7 ? '請在上午送達' : ''
-    })
-  }
-  
-  return orders
-}
 
-const generateMockOrderItems = (count) => {
-  const products = ['珍珠奶茶', '紅茶拿鐵', '綠茶多多', '烏龍茶', '檸檬蜂蜜茶']
-  const items = []
-  
-  for (let i = 0; i < count; i++) {
-    items.push({
-      id: `item-${i}`,
-      productName: products[Math.floor(Math.random() * products.length)],
-      quantity: Math.floor(Math.random() * 3) + 1,
-      price: Math.floor(Math.random() * 100) + 50
-    })
-  }
-  
-  return items
-}
+const mapOrder = (o) => ({
+  id: o.id ?? o.Id ?? '',
+  userId: o.userId ?? o.UserId ?? '',
+  user: o.user ?? {},
+  customerName: o.user?.name ?? o.user?.username ?? o.customerName ?? o.CustomerName ?? '未知客戶',
+  customerPhone: o.user?.phone ?? o.customerPhone ?? o.CustomerPhone ?? '',
+  customerEmail: o.user?.email ?? o.customerEmail ?? o.CustomerEmail ?? '',
+  shippingAddress: o.shippingAddress ?? o.ShippingAddress ?? '',
+  totalAmount: o.totalAmount ?? o.TotalAmount ?? 0,
+  shippingFee: o.shippingFee ?? o.ShippingFee ?? 0,
+  itemCount: (o.items && o.items.length) || o.itemCount || 0,
+  status: o.status ?? o.Status ?? 'pending',
+  paymentMethod: o.paymentMethod ?? o.PaymentMethod ?? 'credit-card',
+  createdAt: o.createdAt ?? o.CreatedAt,
+  items: o.items ?? [],
+  notes: o.notes ?? ''
+})
 
 const refreshOrders = async () => {
   loading.value = true
   try {
-    // 模擬 API 調用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    orders.value = generateMockOrders()
+    const res = await api.get('/orders', { params: { role: 'admin' } })
+    const list = res?.data?.data || []
+    orders.value = list.map(mapOrder)
+  } catch (error) {
+    console.error('載入訂單失敗:', error)
+    alert('載入訂單失敗，請檢查後端')
+    orders.value = []
   } finally {
     loading.value = false
   }
@@ -355,10 +329,9 @@ const refreshOrders = async () => {
 
 const updateOrderStatus = async (order) => {
   try {
-    // 模擬 API 調用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    // 這裡通常會調用 API 更新訂單狀態
-    console.log(`訂單 ${order.id} 狀態已更新為 ${order.status}`)
+  const payload = { Status: order.status }
+  await api.put(`/orders/${order.id}`, payload)
+  console.log(`訂單 ${order.id} 狀態已更新為 ${order.status}`)
   } catch (error) {
     console.error('更新訂單狀態失敗:', error)
     alert('更新訂單狀態失敗')
@@ -371,15 +344,12 @@ const viewOrder = (order) => {
 }
 
 const deleteOrder = async (order) => {
-  if (confirm(`確定要刪除訂單 #${order.id.slice(-8)} 嗎？`)) {
+  if (confirm(`確定要刪除訂單 #${String(order.id).slice(-8)} 嗎？`)) {
     try {
-      // 模擬 API 調用
-      await new Promise(resolve => setTimeout(resolve, 500))
-      const index = orders.value.findIndex(o => o.id === order.id)
-      if (index !== -1) {
-        orders.value.splice(index, 1)
-      }
-      alert('訂單已刪除')
+  await api.delete(`/orders/${order.id}`)
+  const index = orders.value.findIndex(o => o.id === order.id)
+  if (index !== -1) orders.value.splice(index, 1)
+  alert('訂單已刪除')
     } catch (error) {
       console.error('刪除訂單失敗:', error)
       alert('刪除訂單失敗')

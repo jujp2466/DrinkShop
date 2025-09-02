@@ -116,7 +116,7 @@
                   </div>
                   <div class="user-details">
                     <h4>{{ user.name }}</h4>
-                    <p>ID: {{ user.id.slice(-8) }}</p>
+                    <p>ID: {{ String(user.id).slice(-8) }}</p>
                   </div>
                 </div>
               </td>
@@ -240,6 +240,10 @@
                 rows="3"
               ></textarea>
             </div>
+            <div class="form-group">
+              <label>啟用狀態</label>
+              <input type="checkbox" v-model="userForm.isActive"> 啟用
+            </div>
             
             <div class="form-actions">
               <button type="button" @click="closeUserModal" class="btn btn-secondary">
@@ -273,7 +277,7 @@
           <div v-else class="orders-list">
             <div v-for="order in userOrders" :key="order.id" class="order-card">
               <div class="order-header">
-                <span class="order-id">#{{ order.id.slice(-8) }}</span>
+                <span class="order-id">#{{ String(order.id).slice(-8) }}</span>
                 <span class="order-status" :class="order.status">
                   {{ getOrderStatusText(order.status) }}
                 </span>
@@ -293,6 +297,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import api from '@/api'
 
 const loading = ref(false)
 const users = ref([])
@@ -313,7 +318,8 @@ const userForm = ref({
   phone: '',
   password: '',
   role: 'customer',
-  address: ''
+  address: '',
+  isActive: true
 })
 
 // 用戶統計
@@ -385,85 +391,72 @@ const formatDateTime = (dateString) => {
   })
 }
 
-const generateMockUsers = () => {
-  const users = []
-  const names = ['王小明', '李美玲', '張志偉', '陳雅芬', '林俊德', '黃淑芬', '劉建國', '吳佩蓉', '蔡正義', '許雅婷']
-  const domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'example.com']
-  
-  // 添加當前管理員
-  users.push({
-    id: 'current-admin-id',
-    name: '系統管理員',
-    email: 'admin@drinkshop.com',
-    phone: '0912345678',
-    role: 'admin',
-    status: 'active',
-    address: '台北市信義區信義路五段1號',
-    createdAt: new Date('2023-01-01'),
-    lastLoginAt: new Date()
-  })
-  
-  for (let i = 0; i < 15; i++) {
-    const name = names[i % names.length]
-    const domain = domains[Math.floor(Math.random() * domains.length)]
-    const email = `${name.replace(/[^\w]/g, '').toLowerCase()}${i}@${domain}`
-    
-    users.push({
-      id: `user-${Date.now()}-${i}`,
-      name: name,
-      email: email,
-      phone: Math.random() > 0.3 ? `09${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}` : null,
-      role: Math.random() > 0.85 ? 'admin' : 'customer',
-      status: Math.random() > 0.1 ? 'active' : 'inactive',
-      address: `台北市${['中正區', '大同區', '中山區', '松山區', '大安區', '萬華區', '信義區'][Math.floor(Math.random() * 7)]}${Math.floor(Math.random() * 99) + 1}號`,
-      createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
-      lastLoginAt: Math.random() > 0.2 ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) : null
-    })
-  }
-  
-  return users
-}
-
-const generateUserOrders = (userId) => {
-  const orderCount = Math.floor(Math.random() * 8) + 1
-  const orders = []
-  const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
-  
-  for (let i = 0; i < orderCount; i++) {
-    orders.push({
-      id: `order-${userId}-${i}`,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      totalAmount: Math.floor(Math.random() * 2000) + 300,
-      itemCount: Math.floor(Math.random() * 5) + 1,
-      createdAt: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000)
-    })
-  }
-  
-  return orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-}
-
+// 從後端載入真實用戶資料
 const loadUsers = async () => {
   loading.value = true
   try {
-    // 模擬 API 調用
-    await new Promise(resolve => setTimeout(resolve, 800))
-    users.value = generateMockUsers()
+    const res = await api.get('/users')
+    const list = res?.data?.data || []
+    users.value = list.map(u => ({
+      id: (u.id ?? u.Id ?? '').toString(),
+      name: u.username ?? u.Username ?? u.name ?? '',
+      email: u.email ?? u.Email ?? '',
+      phone: u.phone ?? null,
+      role: (u.role ?? u.Role ?? 'customer'),
+      status: 'active', // DB may not have status field yet
+      address: u.address ?? '',
+      isActive: u.isActive ?? true,
+      createdAt: u.createdAt ?? u.CreatedAt ?? new Date(),
+      lastLoginAt: u.lastLoginAt ?? u.LastLoginAt ?? null
+    }))
+  } catch (error) {
+    console.error('載入用戶失敗:', error)
+    alert('載入用戶失敗，請檢查後端')
   } finally {
     loading.value = false
   }
 }
 
+const loadUserOrders = async (user) => {
+  userOrders.value = []
+  try {
+    const userIdNum = Number(user.id)
+    let res
+    if (!Number.isNaN(userIdNum)) {
+      res = await api.get('/orders', { params: { userId: userIdNum } })
+    } else {
+      // fallback: fetch all orders and filter client-side when user id is non-numeric
+      const all = await api.get('/orders', { params: { role: 'admin' } })
+      res = all
+    }
+    const list = res?.data?.data || []
+    // map to UI shape
+    userOrders.value = list.map(o => ({
+      id: o.id ?? o.Id ?? '',
+      status: o.status ?? o.Status ?? 'pending',
+      totalAmount: o.totalAmount ?? o.TotalAmount ?? 0,
+      itemCount: (o.items && o.items.length) || o.itemCount || 0,
+      createdAt: o.createdAt ?? o.CreatedAt
+    }))
+  } catch (error) {
+    console.error('載入用戶訂單失敗:', error)
+    userOrders.value = []
+    alert('載入用戶訂單失敗，請檢查後端')
+  }
+}
+
+// 透過 API 載入用戶
+// 實作放到上方的 loadUsers
+
 const toggleUserStatus = async (user) => {
   const newStatus = user.status === 'active' ? 'inactive' : 'active'
-  
   try {
-    // 模擬 API 調用
-    await new Promise(resolve => setTimeout(resolve, 300))
+    const payload = { Status: newStatus }
+    await api.put(`/users/${user.id}`, payload)
     user.status = newStatus
-    console.log(`用戶 ${user.name} 狀態已更新為 ${newStatus}`)
   } catch (error) {
     console.error('更新用戶狀態失敗:', error)
-    alert('更新用戶狀態失敗')
+    alert('更新用戶狀態失敗，請稍後重試')
   }
 }
 
@@ -475,7 +468,8 @@ const editUser = (user) => {
     phone: user.phone || '',
     password: '',
     role: user.role,
-    address: user.address || ''
+    address: user.address || '',
+    isActive: user.isActive !== false
   }
   showEditUserModal.value = true
 }
@@ -483,15 +477,7 @@ const editUser = (user) => {
 const viewUserOrders = async (user) => {
   selectedUser.value = user
   showOrdersModal.value = true
-  
-  // 載入用戶訂單
-  try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    userOrders.value = generateUserOrders(user.id)
-  } catch (error) {
-    console.error('載入用戶訂單失敗:', error)
-    userOrders.value = []
-  }
+  await loadUserOrders(user)
 }
 
 const deleteUser = async (user) => {
@@ -502,51 +488,64 @@ const deleteUser = async (user) => {
 
   if (confirm(`確定要刪除用戶 ${user.name} 嗎？`)) {
     try {
-      // 模擬 API 調用
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await api.delete(`/users/${user.id}`)
       const index = users.value.findIndex(u => u.id === user.id)
-      if (index !== -1) {
-        users.value.splice(index, 1)
-      }
+      if (index !== -1) users.value.splice(index, 1)
       alert('用戶已刪除')
     } catch (error) {
       console.error('刪除用戶失敗:', error)
-      alert('刪除用戶失敗')
+      alert('刪除用戶失敗，請稍後重試')
     }
   }
 }
 
 const submitUserForm = async () => {
   try {
-    // 模擬 API 調用
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
     if (showCreateUserModal.value) {
-      // 新增用戶
-      const newUser = {
-        id: `user-${Date.now()}`,
-        name: userForm.value.name,
-        email: userForm.value.email,
-        phone: userForm.value.phone,
-        role: userForm.value.role,
-        status: 'active',
-        address: userForm.value.address,
-        createdAt: new Date(),
-        lastLoginAt: null
+      // call register endpoint
+      const payload = {
+        Username: userForm.value.name,
+        Password: userForm.value.password,
+        Email: userForm.value.email
       }
-      users.value.unshift(newUser)
-      alert('用戶創建成功')
+      const res = await api.post('/auth/register', payload)
+      const newUser = res?.data?.data
+      if (newUser) {
+        users.value.unshift({
+          id: (newUser.Id ?? newUser.id ?? '').toString(),
+          name: newUser.Username ?? newUser.username ?? userForm.value.name,
+          email: newUser.Email ?? userForm.value.email,
+          phone: userForm.value.phone,
+          role: newUser.Role ?? userForm.value.role,
+          status: 'active',
+          address: userForm.value.address,
+          createdAt: new Date(),
+          lastLoginAt: null
+        })
+        alert('用戶創建成功')
+      } else {
+        alert('用戶創建失敗')
+      }
     } else {
-      // 更新用戶
+      // update existing user
+      const payload = {
+        Username: userForm.value.name,
+        Email: userForm.value.email,
+        Phone: userForm.value.phone,
+        Role: userForm.value.role,
+        Address: userForm.value.address,
+        IsActive: userForm.value.isActive
+      }
+      await api.put(`/users/${selectedUser.value.id}`, payload)
       Object.assign(selectedUser.value, {
         name: userForm.value.name,
         phone: userForm.value.phone,
         role: userForm.value.role,
-        address: userForm.value.address
+        address: userForm.value.address,
+        isActive: userForm.value.isActive
       })
       alert('用戶資料更新成功')
     }
-    
     closeUserModal()
   } catch (error) {
     console.error('提交失敗:', error)

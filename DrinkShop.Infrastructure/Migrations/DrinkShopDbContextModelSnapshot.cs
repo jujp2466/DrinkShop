@@ -26,8 +26,26 @@ namespace DrinkShop.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
-                        .HasColumnName("created_at")
+                        .HasColumnName("createdAt")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("paymentMethod");
+
+                    b.Property<string>("ShippingAddress")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("shippingAddress");
+
+                    b.Property<decimal>("ShippingFee")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("REAL")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("shippingFee");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -38,11 +56,11 @@ namespace DrinkShop.Infrastructure.Migrations
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("REAL")
-                        .HasColumnName("total_amount");
+                        .HasColumnName("totalAmount");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
+                        .HasColumnName("userId");
 
                     b.HasKey("Id");
 
@@ -59,7 +77,7 @@ namespace DrinkShop.Infrastructure.Migrations
 
                     b.Property<int>("OrderId")
                         .HasColumnType("INTEGER")
-                        .HasColumnName("order_id");
+                        .HasColumnName("orderId");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("REAL")
@@ -67,7 +85,7 @@ namespace DrinkShop.Infrastructure.Migrations
 
                     b.Property<int>("ProductId")
                         .HasColumnType("INTEGER")
-                        .HasColumnName("product_id");
+                        .HasColumnName("productId");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER")
@@ -79,7 +97,7 @@ namespace DrinkShop.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("order_items", (string)null);
+                    b.ToTable("orderItems", (string)null);
                 });
 
             modelBuilder.Entity("DrinkShop.Domain.Entities.Product", b =>
@@ -95,7 +113,7 @@ namespace DrinkShop.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
-                        .HasColumnName("created_at")
+                        .HasColumnName("createdAt")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
@@ -104,13 +122,13 @@ namespace DrinkShop.Infrastructure.Migrations
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("TEXT")
-                        .HasColumnName("image_url");
+                        .HasColumnName("imageUrl");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(true)
-                        .HasColumnName("is_active");
+                        .HasColumnName("isActive");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -138,10 +156,14 @@ namespace DrinkShop.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("address");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
-                        .HasColumnName("created_at")
+                        .HasColumnName("createdAt")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Email")
@@ -149,10 +171,30 @@ namespace DrinkShop.Infrastructure.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("email");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isActive");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("lastLoginAt");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("password");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("passwordHash");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("phone");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -161,17 +203,24 @@ namespace DrinkShop.Infrastructure.Migrations
                         .HasDefaultValue("user")
                         .HasColumnName("role");
 
-                    b.Property<string>("Username")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("active")
+                        .HasColumnName("status");
+
+                    b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("username");
+                        .HasColumnName("userName");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.HasIndex("Username")
+                    b.HasIndex("UserName")
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
@@ -179,30 +228,42 @@ namespace DrinkShop.Infrastructure.Migrations
 
             modelBuilder.Entity("DrinkShop.Domain.Entities.Order", b =>
                 {
-                    b.HasOne("DrinkShop.Domain.Entities.User", null)
-                        .WithMany()
+                    b.HasOne("DrinkShop.Domain.Entities.User", "User")
+                        .WithMany("Orders")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DrinkShop.Domain.Entities.OrderItem", b =>
                 {
-                    b.HasOne("DrinkShop.Domain.Entities.Order", null)
+                    b.HasOne("DrinkShop.Domain.Entities.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DrinkShop.Domain.Entities.Product", null)
+                    b.HasOne("DrinkShop.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("DrinkShop.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("DrinkShop.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }

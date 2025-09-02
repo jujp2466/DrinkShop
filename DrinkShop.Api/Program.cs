@@ -95,13 +95,13 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate(); // 如果資料表不存在就自動建立
     
     // 確保有admin用戶
-    var adminUser = db.Users.FirstOrDefault(u => u.Username == "admin");
+    var adminUser = db.Users.FirstOrDefault(u => u.UserName == "admin");
     if (adminUser == null)
     {
         // 創建新的admin用戶
         adminUser = new DrinkShop.Domain.Entities.User
         {
-            Username = "admin",
+            UserName = "admin",
             Password = "admin123", // 生產環境應該使用加密
             Email = "admin@drinkshop.com",
             Role = "admin"
@@ -115,11 +115,11 @@ using (var scope = app.Services.CreateScope())
         // 將現有用戶設置為admin
         adminUser.Role = "admin";
         db.SaveChanges();
-        Console.WriteLine($"User '{adminUser.Username}' role updated to admin");
+        Console.WriteLine($"User '{adminUser.UserName}' role updated to admin");
     }
     else
     {
-        Console.WriteLine($"Admin user '{adminUser.Username}' already exists");
+        Console.WriteLine($"Admin user '{adminUser.UserName}' already exists");
     }
 }
 // ===============================================
