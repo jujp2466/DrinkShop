@@ -80,7 +80,7 @@
         <div v-else class="recent-orders">
           <div v-for="order in recentOrders" :key="order.id" class="order-item">
             <div class="order-info">
-              <span class="order-id">#{{ order.id.slice(-6) }}</span>
+              <span class="order-id">#{{ String(order.id).slice(-6) }}</span>
               <span class="order-customer">{{ order.customerName }}</span>
             </div>
             <div class="order-details">
@@ -137,7 +137,7 @@
             </div>
             <div class="product-info">
               <h4>{{ product.name }}</h4>
-              <p class="product-sales">銷售 {{ product.sales || 0 }} 件</p>
+              <p class="product-category">{{ product.category }}</p>
             </div>
             <div class="product-price">
               NT$ {{ product.price }}
@@ -179,6 +179,46 @@ const getStatusText = (status) => {
   return statusMap[status] || '未知'
 }
 
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return '未知'
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('zh-TW') + ' ' + date.toLocaleTimeString('zh-TW', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+  } catch (error) {
+    console.error('日期格式化錯誤:', error)
+    return '無效日期'
+  }
+}
+
+// API 基礎 URL
+const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5249/api/v1' : '/api/v1'
+
+// API 請求函數
+const fetchApi = async (endpoint) => {
+  try {
+    const token = localStorage.getItem('token')
+    const response = await fetch(`${apiBase}${endpoint}`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    return await response.json()
+  } catch (error) {
+    console.error(`API call failed for ${endpoint}:`, error)
+    throw error
+  }
+}
+
 // 刷新數據
 const refreshData = async () => {
   try {
@@ -186,42 +226,51 @@ const refreshData = async () => {
     await productStore.fetchProducts()
     totalProducts.value = productStore.products.length
     
-    // 模擬其他數據
-    totalOrders.value = Math.floor(Math.random() * 500) + 100
-    totalUsers.value = Math.floor(Math.random() * 200) + 50
-    totalRevenue.value = Math.floor(Math.random() * 1000000) + 500000
+    // 獲取訂單數據
+    try {
+      const ordersResponse = await fetchApi('/orders?role=admin')
+      const orders = ordersResponse.data || []
+      totalOrders.value = orders.length
+      
+      // 計算總營收
+      totalRevenue.value = orders.reduce((sum, order) => {
+        return sum + (order.totalAmount || 0)
+      }, 0)
+      
+      // 最近訂單（取前5筆）
+      recentOrders.value = orders
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+        .map(order => ({
+          id: order.id,
+          customerName: order.user?.name || order.user?.username || '未知客戶',
+          totalAmount: order.totalAmount || 0,
+          status: order.status || 'pending',
+          createdAt: order.createdAt
+        }))
+    } catch (error) {
+      console.error('獲取訂單數據失敗:', error)
+      totalOrders.value = 0
+      totalRevenue.value = 0
+      recentOrders.value = []
+    }
     
-    // 模擬最近訂單
-    recentOrders.value = generateMockOrders()
+    // 獲取用戶數據
+    try {
+      const usersResponse = await fetchApi('/users?role=admin')
+      const users = usersResponse.data || []
+      totalUsers.value = users.length
+    } catch (error) {
+      console.error('獲取用戶數據失敗:', error)
+      totalUsers.value = 0
+    }
     
-    // 設置熱門產品（從現有產品中選取）
-    popularProducts.value = productStore.products.slice(0, 5).map(product => ({
-      ...product,
-      sales: Math.floor(Math.random() * 100) + 10
-    }))
+    // 設置熱門產品（從現有產品中選取前5個）
+    popularProducts.value = productStore.products.slice(0, 5)
     
   } catch (error) {
     console.error('刷新數據失敗:', error)
   }
-}
-
-// 生成模擬訂單數據
-const generateMockOrders = () => {
-  const orders = []
-  const statuses = ['pending', 'processing', 'shipped', 'delivered']
-  const names = ['王小明', '李美玲', '張志偉', '陳雅芬', '林俊德']
-  
-  for (let i = 0; i < 5; i++) {
-    orders.push({
-      id: `order-${Date.now()}-${i}`,
-      customerName: names[Math.floor(Math.random() * names.length)],
-      totalAmount: Math.floor(Math.random() * 2000) + 500,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-    })
-  }
-  
-  return orders.sort((a, b) => b.createdAt - a.createdAt)
 }
 
 onMounted(() => {
@@ -592,7 +641,7 @@ const imageSrc = (item) => {
   margin: 0 0 0.25rem 0;
 }
 
-.product-sales {
+.product-category {
   font-size: 0.75rem;
   color: #6b7280;
   margin: 0;

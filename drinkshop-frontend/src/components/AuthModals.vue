@@ -89,6 +89,7 @@
           >
         </div>
         
+
         <div class="form-group">
           <label for="registerPassword">密碼</label>
           <input
@@ -100,7 +101,7 @@
             placeholder="請輸入密碼"
           >
         </div>
-        
+
         <div class="form-group">
           <label for="confirmPassword">確認密碼</label>
           <input
@@ -111,6 +112,36 @@
             class="form-input"
             placeholder="請再次輸入密碼"
           >
+        </div>
+
+        <div class="form-group">
+          <label for="registerPhone">電話</label>
+          <input
+            id="registerPhone"
+            v-model="registerForm.phone"
+            type="tel"
+            class="form-input"
+            placeholder="請輸入電話號碼"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="registerAddress">地址</label>
+          <input
+            id="registerAddress"
+            v-model="registerForm.address"
+            type="text"
+            class="form-input"
+            placeholder="請輸入地址"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="registerIsActive">啟用狀態</label>
+          <select id="registerIsActive" v-model="registerForm.isActive" class="form-input">
+            <option :value="true">啟用</option>
+            <option :value="false">停用</option>
+          </select>
         </div>
         
         <div class="modal-footer">
@@ -146,7 +177,10 @@ const registerForm = reactive({
   username: '',
   email: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  phone: '',
+  address: '',
+  isActive: true
 })
 
 // 公開的方法，供父組件調用
@@ -183,13 +217,13 @@ const switchToLogin = () => {
 }
 
 const handleLogin = async () => {
+  console.log('handleLogin 被調用')
   const result = await authStore.login(loginForm)
   if (result.success) {
     closeModals()
     // 清空表單
     loginForm.username = ''
     loginForm.password = ''
-    
     // 根據用戶角色跳轉到不同頁面
     if (result.redirectTo) {
       await router.push(result.redirectTo)
@@ -202,23 +236,34 @@ const handleLogin = async () => {
 }
 
 const handleRegister = async () => {
-  if (registerForm.password !== registerForm.confirmPassword) {
-    authStore.error = '密碼確認不一致'
-    return
-  }
-
-  const result = await authStore.register({
-    username: registerForm.username,
+  // 準備 payload
+  const payload = {
+    userName: registerForm.username,
     email: registerForm.email,
-    password: registerForm.password
-  })
-
+    password: registerForm.password,
+    address: registerForm.address,
+    phone: registerForm.phone,
+    isActive: registerForm.isActive
+  }
+  const result = await authStore.register(payload)
   if (result.success) {
     closeModals()
     // 清空表單
-    Object.keys(registerForm).forEach(key => {
-      registerForm[key] = ''
-    })
+    registerForm.username = ''
+    registerForm.email = ''
+    registerForm.password = ''
+    registerForm.confirmPassword = ''
+    registerForm.phone = ''
+    registerForm.address = ''
+    registerForm.isActive = true
+    // 根據用戶角色跳轉到不同頁面
+    if (result.redirectTo) {
+      await router.push(result.redirectTo)
+    } else if (result.user?.role === 'admin') {
+      await router.push('/admin')
+    } else {
+      await router.push('/')
+    }
   }
 }
 

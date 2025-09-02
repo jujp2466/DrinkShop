@@ -120,17 +120,28 @@
               placeholder="請輸入產品描述"
             ></textarea>
           </div>
+
+          <div class="form-group">
+            <label for="productImageUrl">照片網址</label>
+            <input
+              id="productImageUrl"
+              v-model="productForm.imageUrl"
+              type="text"
+              class="form-input"
+              placeholder="請輸入產品照片網址 (可選)"
+            >
+          </div>
           
           <div class="form-group">
-            <label>
+            <label class="checkbox-label">
               <input
                 v-model="productForm.isActive"
                 type="checkbox"
               >
-              立即上架
+              <span class="checkbox-text">立即上架</span>
             </label>
           </div>
-          
+
           <div class="modal-footer">
             <button type="button" @click="closeModal" class="btn btn-secondary">
               取消
@@ -159,7 +170,8 @@ const productForm = reactive({
   name: '',
   price: 0,
   description: '',
-  isActive: true
+  isActive: true,
+  imageUrl: ''
 })
 
 const formatDate = (dateString) => {
@@ -198,6 +210,7 @@ const editProduct = (product) => {
   productForm.price = product.price
   productForm.description = product.description || ''
   productForm.isActive = product.isActive
+  productForm.imageUrl = product.imageUrl || ''
   showModal.value = true
 }
 
@@ -245,6 +258,7 @@ const resetForm = () => {
   productForm.price = 0
   productForm.description = ''
   productForm.isActive = true
+  productForm.imageUrl = ''
 }
 
 onMounted(() => {
@@ -513,6 +527,24 @@ th {
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 0.5rem;
+  /* Optional: for custom checkbox styling */
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.checkbox-text {
+  font-weight: 500;
+  color: #374151;
 }
 
 /* 響應式設計 */

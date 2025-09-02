@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('auth', {
         const { data } = response.data
         
         // 生成一個簡單的 token（實際項目中應該由後端生成JWT）
-        const token = `token_${data.Id}_${Date.now()}`
+        const token = `token_${data.id}_${Date.now()}`
         
         this.token = token
         this.user = data
@@ -84,12 +84,20 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
       
       try {
-        await axios.post(`${API_BASE_URL}/auth/register`, userData)
-        
+        // payload 轉換，後端需要 userName
+        const payload = {
+          UserName: userData.userName ?? userData.username,
+          Password: userData.password,
+          Email: userData.email,
+          Address: userData.address,
+          Phone: userData.phone,
+          IsActive: userData.isActive
+        }
+        await axios.post(`${API_BASE_URL}/auth/register`, payload)
         // 註冊成功後自動登入
         return await this.login({
-          username: userData.username,
-          password: userData.password
+          username: payload.UserName,
+          password: payload.Password
         })
       } catch (error) {
         this.error = error.response?.data?.message || '註冊失敗'

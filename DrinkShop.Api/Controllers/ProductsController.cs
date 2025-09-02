@@ -23,7 +23,6 @@ namespace DrinkShop.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var products = await _db.Products
-                .Where(p => p.IsActive)
                 .OrderByDescending(p => p.Id)
                 .ToListAsync();
             return Ok(new { code = 200, message = "Success", data = products });
@@ -33,7 +32,7 @@ namespace DrinkShop.Api.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null) return NotFound(new { code = 404, message = "Not Found" });
             return Ok(new { code = 200, message = "Success", data = product });
         }
@@ -50,11 +49,31 @@ namespace DrinkShop.Api.Controllers
                 Category = input.Category,
                 ImageUrl = input.ImageUrl,
                 Stock = input.Stock,
-                IsActive = input.IsActive == default ? true : input.IsActive
+                IsActive = input.IsActive
             };
             _db.Products.Add(product);
             await _db.SaveChangesAsync();
             return Ok(new { code = 200, message = "Created", data = product });
+        }
+
+        // PUT /api/v1/products/{id}
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] Product input)
+        {
+            var product = await _db.Products.FindAsync(id);
+            if (product == null)
+                return NotFound(new { code = 404, message = "Not Found" });
+
+            product.Name = input.Name;
+            product.Description = input.Description;
+            product.Price = input.Price;
+            product.Category = input.Category;
+            product.ImageUrl = input.ImageUrl;
+            product.Stock = input.Stock;
+            product.IsActive = input.IsActive;
+
+            await _db.SaveChangesAsync();
+            return Ok(new { code = 200, message = "Updated", data = product });
         }
 
         // DELETE /api/v1/products/{id}

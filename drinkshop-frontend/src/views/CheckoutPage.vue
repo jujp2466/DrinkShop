@@ -198,6 +198,7 @@ import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 import MainLayout from '@/layouts/MainLayout.vue'
+import api from '@/api'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -221,31 +222,55 @@ const submitOrder = async () => {
   isSubmitting.value = true
   
   try {
-    // 構建訂單數據
+    // 如果用戶已登入，先更新用戶資訊
+    if (authStore.currentUser?.Id) {
+      const userUpdateData = {
+        name: orderForm.customerName,
+        phone: orderForm.customerPhone,
+        email: orderForm.customerEmail,
+        address: orderForm.shippingAddress
+      }
+      
+      try {
+        await api.put(`/users/${authStore.currentUser.Id}`, userUpdateData)
+      } catch (userUpdateError) {
+        console.warn('更新用戶資訊失敗：', userUpdateError)
+        // 繼續提交訂單，不因為用戶資訊更新失敗而中斷
+      }
+    }
+    
+    // 構建訂單數據（配合第三正規化結構）
     const orderData = {
-      ...orderForm,
+      userId: authStore.currentUser?.id ? Number(authStore.currentUser.id) : 1, // 如果沒有登入，使用訪客用戶ID
+      totalAmount: cartStore.totalAmount + shippingFee.value,
+      shippingFee: shippingFee.value,
+      shippingAddress: orderForm.shippingAddress,
+      paymentMethod: orderForm.paymentMethod,
+      notes: orderForm.notes,
       items: cartStore.cartItems.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
         price: item.product.price
-      })),
-      totalAmount: cartStore.totalAmount + shippingFee.value,
-      shippingFee: shippingFee.value
+      }))
     }
 
-    // 模擬 API 調用
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // 呼叫後端 API 創建訂單
+    const response = await api.post('/orders', orderData)
     
-    // 訂單成功
-    alert('訂單已成功提交！我們會盡快為您處理。')
-    
-    // 清空購物車
-    cartStore.clearCart()
-    
-    // 導向首頁
-    router.push('/')
+    if (response.data?.code === 200) {
+      alert('訂單已成功提交！我們會盡快為您處理。')
+      
+      // 清空購物車
+      cartStore.clearCart()
+      
+      // 導向首頁
+      router.push('/')
+    } else {
+      throw new Error('訂單創建失敗')
+    }
     
   } catch (error) {
+    console.error('訂單提交失敗:', error)
     alert('訂單提交失敗，請稍後再試。')
   } finally {
     isSubmitting.value = false
