@@ -1,0 +1,50 @@
+name: Deploy DrinkShop API to Azure App Service
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'DrinkShop.Api/**'
+      - 'DrinkShop.Infrastructure/**'
+      - 'DrinkShop.Domain/**'
+      - '.github/workflows/deploy-backend-appservice.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    env:
+      PROJECT_PATH: DrinkShop.Api/DrinkShop.Api.csproj
+      PUBLISH_DIR: ${{ github.workspace }}\publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore $env:PROJECT_PATH
+
+      - name: Build
+        run: dotnet build $env:PROJECT_PATH --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish $env:PROJECT_PATH --configuration Release --no-build --output $env:PUBLISH_DIR
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: drinkshop-c5ccheftavfvh0av
+          package: ${{ env.PUBLISH_DIR }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+
+      - name: Post-deploy warmup (optional)
+        shell: pwsh
+        run: |
+          try {
+            $resp = Invoke-WebRequest -Uri "https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net/swagger" -UseBasicParsing -TimeoutSec 30
+            Write-Host "Warmup status: $($resp.StatusCode)"
+          } catch { Write-Warning $_ }
