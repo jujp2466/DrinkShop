@@ -1,7 +1,7 @@
 <template>
   <div class="product-card">
     <div class="product-image">
-      <img :src="imageSrc" :alt="product.name" />
+      <img :src="imageSrc(product)" :alt="product.name" />
       <div class="product-badge" v-if="product.isNew">NEW</div>
     </div>
     

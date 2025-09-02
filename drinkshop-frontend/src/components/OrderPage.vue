@@ -219,7 +219,7 @@ body, .order-page {
   color: #99ccff;
 }
 .hero {
-  background-image: url('https://images.unsplash.com/photo-1657759558425-a0f43e577432?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000');
+  background-image: url('https://plus.unsplash.com/premium_photo-1664970900025-1e3099ca757a?fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FmZXxlbnwwfHwwfHx8MA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000');
   background-size: cover;
   background-position: center;
   height: 400px;
