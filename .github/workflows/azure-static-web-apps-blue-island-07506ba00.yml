@@ -17,8 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     permissions:
-       id-token: write
-       contents: read
+      id-token: write
+      contents: read
+    env:
+      # Vite needs this at build time to embed the API base URL into the generated assets
+      VITE_API_BASE_URL: 'https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net/api/v1'
     steps:
       # 1️⃣ 下載專案，把程式碼檢出到 Runner
       - uses: actions/checkout@v3

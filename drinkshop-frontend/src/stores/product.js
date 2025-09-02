@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-
-const API_BASE_URL = 'http://localhost:5249/api/v1'
+import api from '../api'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
@@ -34,7 +33,7 @@ export const useProductStore = defineStore('product', {
       this.error = null
       
       try {
-        const response = await axios.get(`${API_BASE_URL}/products`)
+  const response = await api.get(`/products`)
         // API 返回的格式是 {code: 200, message: "Success", data: [...]}
         this.products = response.data.data || []
       } catch (error) {
@@ -51,7 +50,7 @@ export const useProductStore = defineStore('product', {
       this.error = null
       
       try {
-        const response = await axios.get(`${API_BASE_URL}/products/${id}`)
+  const response = await api.get(`/products/${id}`)
         // API 返回的格式是 {code: 200, message: "Success", data: {...}}
         this.currentProduct = response.data.data || null
         return response.data.data
@@ -69,7 +68,7 @@ export const useProductStore = defineStore('product', {
       this.error = null
       
       try {
-        const response = await axios.post(`${API_BASE_URL}/products`, productData)
+  const response = await api.post(`/products`, productData)
         const newProduct = response.data.data || response.data
         // 確保 products 是陣列
         if (Array.isArray(this.products)) {
@@ -90,7 +89,7 @@ export const useProductStore = defineStore('product', {
       this.error = null
       
       try {
-        const response = await axios.put(`${API_BASE_URL}/products/${id}`, productData)
+  const response = await api.put(`/products/${id}`, productData)
         const updatedProduct = response.data.data || response.data
         // 確保 products 是陣列
         if (Array.isArray(this.products)) {
@@ -114,7 +113,7 @@ export const useProductStore = defineStore('product', {
       this.error = null
       
       try {
-        await axios.delete(`${API_BASE_URL}/products/${id}`)
+  await api.delete(`/products/${id}`)
         // 確保 products 是陣列
         if (Array.isArray(this.products)) {
           this.products = this.products.filter(product => product.id !== id)

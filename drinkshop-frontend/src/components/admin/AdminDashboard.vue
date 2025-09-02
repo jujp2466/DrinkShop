@@ -81,6 +81,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import api from '../../api'
 
 // 響應式數據
 const loading = ref(true)
@@ -93,8 +94,8 @@ const dashboardStats = ref({
   totalRevenue: 0
 })
 
-// API 基礎 URL
-const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5249/api/v1' : '/api/v1'
+// 使用共享 axios 實例 api
+const apiClient = api
 
 // 計算統計數據
 const stats = computed(() => [
@@ -169,18 +170,9 @@ const getStatusText = (status) => {
 const fetchApi = async (endpoint) => {
   try {
     const token = localStorage.getItem('token')
-    const response = await fetch(`${apiBase}${endpoint}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    return await response.json()
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const response = await apiClient.get(endpoint, { headers })
+    return response.data
   } catch (error) {
     console.error(`API call failed for ${endpoint}:`, error)
     throw error
