@@ -169,16 +169,7 @@ onMounted(() => {
 
 // 統一圖片來源處理：支援 imageUrl / image / 相對路徑 與預設圖；茶類優先用茶圖
 const imageSrc = (item) => {
-  const candidate = item?.imageUrl || item?.image || ''
-  const name = (item?.name || '').toLowerCase()
-  const category = (item?.category || '').toLowerCase()
-  const isTea = /茶|tea/.test(name) || /茶|tea/.test(category)
-  if (!candidate) return isTea
-    ? 'https://images.unsplash.com/photo-1488900128323-21503983a07e'
-    : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836'
-  if (candidate.startsWith('http://') || candidate.startsWith('https://')) return candidate
-  if (candidate.startsWith('/')) return candidate
-  return candidate
+  return item?.imageUrl || item?.image || ''
 }
 </script>
 
@@ -228,7 +219,7 @@ body, .order-page {
   color: #99ccff;
 }
 .hero {
-  background-image: url('https://images.unsplash.com/photo-1509475826633-fed577a2c71b');
+  background-image: url('https://images.unsplash.com/photo-1657759558425-a0f43e577432?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000');
   background-size: cover;
   background-position: center;
   height: 400px;

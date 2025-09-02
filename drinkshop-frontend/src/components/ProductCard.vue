@@ -51,28 +51,9 @@ const quantity = ref(1)
 // 1) 優先使用 product.imageUrl，其次 product.image
 // 2) 若是相對路徑（以 / 開頭），嘗試直接使用（Vite 會從 /public 提供）；
 // 3) 否則回退到 Unsplash 圖片。
-// 產出最終圖片 URL：
-// 1) 優先使用 product.imageUrl，其次 product.image
-// 2) 若是相對路徑（以 / 開頭），嘗試直接使用（Vite 會從 /public 提供）；
-// 3) 否則回退到 Unsplash 圖片。茶類使用專屬茶圖。
-const imageSrc = computed(() => {
-  const candidate = props.product.imageUrl || props.product.image || ''
-  const name = (props.product.name || '').toLowerCase()
-  const category = (props.product.category || '').toLowerCase()
-  const isTea = /茶|tea/.test(name) || /茶|tea/.test(category)
-  if (!candidate) {
-    return isTea
-      ? 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop' // tea fallback
-      : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836'
-  }
-  if (candidate.startsWith('http://') || candidate.startsWith('https://')) {
-    return candidate
-  }
-  if (candidate.startsWith('/')) {
-    return candidate
-  }
-  return candidate
-})
+const imageSrc = (item) => {
+  return item?.imageUrl || item?.image || ''
+}
 
 const increaseQuantity = () => {
   quantity.value++
