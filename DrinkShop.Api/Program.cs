@@ -7,25 +7,21 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
+        var origins = new List<string>
+        {
+            "https://blue-island-07506ba00.1.azurestaticapps.net"
+        };
+
         if (builder.Environment.IsDevelopment())
         {
-            // 開發環境允許任意來源與方法，避免 Vite 動態埠（5173/5174/…）造成阻擋
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+            origins.Add("http://localhost:5173");
+            origins.Add("http://localhost:5174");
         }
-        else
-        {
-            policy.WithOrigins(
-                    "http://localhost:5173",
-                    "http://localhost:5174", // 新的本地端口
-                    "https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net",
-                    "https://blue-island-07506ba00.1.azurestaticapps.net"
-                )
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials(); // 添加憑證支援
-        }
+        
+        policy.WithOrigins(origins.ToArray())
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -55,9 +51,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// 啟用 CORS
+// 正確的中介軟體順序
 app.UseRouting();
 app.UseCors("AllowFrontend");
+app.UseAuthentication(); // 如果有使用
+app.UseAuthorization();
 
 // Log actual DB path for debugging
 Console.WriteLine($"Using database file: {dbFilePath}");
@@ -88,13 +86,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseAuthorization();
-// 回應所有預檢請求，避免 404 導致瀏覽器判定沒有 CORS 標頭
-app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
-    .RequireCors("AllowFrontend");
 
-// 所有控制器都強制套用同一個 CORS 原則
-app.MapControllers()
-    .RequireCors("AllowFrontend");
+// 處理預檢請求（避免 404 導致瀏覽器判定無 CORS 標頭）
+app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
+   .RequireCors("AllowFrontend");
+
+app.MapControllers().RequireCors("AllowFrontend");
 
 // ====== 自動建立資料表 (EF Core Migration) ======
 using (var scope = app.Services.CreateScope())
