@@ -93,43 +93,51 @@ app.MapControllers();
 // ====== 自動建立資料表 (EF Core Migration) ======
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<DrinkShopDbContext>();
-    db.Database.Migrate(); // 如果資料表不存在就自動建立
-    
-    // 確保有admin用戶
-    var adminUser = db.Users.FirstOrDefault(u => u.UserName == "admin");
-    if (adminUser == null)
+    var services = scope.ServiceProvider;
+    try
     {
-        // 創建新的admin用戶
-        adminUser = new DrinkShop.Domain.Entities.User
+        var db = services.GetRequiredService<DrinkShopDbContext>();
+        db.Database.Migrate(); // 如果資料表不存在就自動建立
+        
+        // 確保有admin用戶
+        var adminUser = db.Users.FirstOrDefault(u => u.UserName == "admin");
+        if (adminUser == null)
         {
-            UserName = "admin",
-            Password = "admin123", // 生產環境應該使用加密
-            Email = "admin@drinkshop.com",
-            Role = "admin"
-        };
-        db.Users.Add(adminUser);
-        db.SaveChanges();
-        Console.WriteLine("Default admin user created: admin/admin123");
+            // 創建新的admin用戶
+            adminUser = new DrinkShop.Domain.Entities.User
+            {
+                UserName = "admin",
+                Password = "admin123", // 生產環境應該使用加密
+                Email = "admin@drinkshop.com",
+                Role = "admin",
+                Phone = "0000000000", // 預設電話號碼
+                PasswordHash = "admin123", // 暫時使用明文，生產環境應加密
+                IsActive = true,
+                Status = "active"
+            };
+            db.Users.Add(adminUser);
+            db.SaveChanges();
+            Console.WriteLine("Default admin user created: admin/admin123");
+        }
+        else if (adminUser.Role != "admin")
+        {
+            // 將現有用戶設置為admin
+            adminUser.Role = "admin";
+            db.SaveChanges();
+            Console.WriteLine($"User '{adminUser.UserName}' role updated to admin");
+        }
+        else
+        {
+            Console.WriteLine($"Admin user '{adminUser.UserName}' already exists");
+        }
     }
-    else if (adminUser.Role != "admin")
+    catch (Exception ex)
     {
-        // 將現有用戶設置為admin
-        adminUser.Role = "admin";
-        db.SaveChanges();
-        Console.WriteLine($"User '{adminUser.UserName}' role updated to admin");
-    }
-    else
-    {
-        Console.WriteLine($"Admin user '{adminUser.UserName}' already exists");
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred during database initialization.");
+        // 根據你的策略，你可能想在這裡讓應用程式失敗，或只是記錄錯誤並繼續
     }
 }
 // ===============================================
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<DrinkShopDbContext>();
-    db.Database.ExecuteSqlRaw("DELETE FROM __EFMigrationsLock;");
-}
 
 app.Run();
