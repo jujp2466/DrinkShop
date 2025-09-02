@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DrinkShop.Infrastructure.Migrations
 {
     [DbContext(typeof(DrinkShopDbContext))]
-    [Migration("20250902032443_CamelCaseNaming")]
-    partial class CamelCaseNaming
+    [Migration("20250902123539_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

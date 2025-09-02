@@ -18,11 +18,13 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     "http://localhost:5173",
+                    "http://localhost:5174", // 新的本地端口
                     "https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net",
                     "https://blue-island-07506ba00.1.azurestaticapps.net"
                 )
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .AllowCredentials(); // 添加憑證支援
         }
     });
 });
