@@ -88,7 +88,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseAuthorization();
-app.MapControllers();
+// 回應所有預檢請求，避免 404 導致瀏覽器判定沒有 CORS 標頭
+app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
+    .RequireCors("AllowFrontend");
+
+// 所有控制器都強制套用同一個 CORS 原則
+app.MapControllers()
+    .RequireCors("AllowFrontend");
 
 // ====== 自動建立資料表 (EF Core Migration) ======
 using (var scope = app.Services.CreateScope())
