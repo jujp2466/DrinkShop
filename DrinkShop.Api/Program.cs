@@ -1,7 +1,8 @@
+using DrinkShop.Application.Interfaces;
+using DrinkShop.Application.Services;
 using DrinkShop.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,6 +65,10 @@ if (!string.IsNullOrEmpty(dbDir) && !Directory.Exists(dbDir))
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // 配置 DbContext - 使用 SQLite 共享快取模式
 var connectionString = new SqliteConnectionStringBuilder
