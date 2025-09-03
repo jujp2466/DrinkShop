@@ -56,7 +56,7 @@ else
 
 // 確保目錄存在
 var dbDir = Path.GetDirectoryName(dbPath);
-if (!Directory.Exists(dbDir))
+if (!string.IsNullOrEmpty(dbDir) && !Directory.Exists(dbDir))
 {
     Directory.CreateDirectory(dbDir);
     Console.WriteLine($"Created database directory: {dbDir}");
@@ -139,7 +139,7 @@ using (var scope = app.Services.CreateScope())
         var db = services.GetRequiredService<DrinkShopDbContext>();
         
         // 處理記憶體內資料庫的邏輯
-        if (dbFilePath == ":memory:")
+        if (dbPath == ":memory:")
         {
             Console.WriteLine("Initializing in-memory database...");
             
