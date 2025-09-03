@@ -79,7 +79,6 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
-app.UseAuthorization();
 
 // 處理預檢請求（避免 404 導致瀏覽器判定無 CORS 標頭）
 app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
