@@ -23,16 +23,43 @@ builder.Services.AddCors(options =>
 var contentRoot = builder.Environment.ContentRootPath; // 明確使用應用程式內容根路徑
 // 如果在 Azure App Service 上，系統會提供 HOME 環境變數，該路徑位於持久化儲存 (D:\home)，推薦把 DB 放在這裡以避免被部署覆寫。
 var homeEnv = Environment.GetEnvironmentVariable("HOME");
+
+// 增加診斷資訊
+Console.WriteLine($"Content Root: {contentRoot}");
+Console.WriteLine($"HOME env: {homeEnv ?? "not set"}");
+
+// 在 Azure 上使用 site/wwwroot 下的 App_Data 目錄，這是建議的持久化儲存位置
 string defaultDataPath = !string.IsNullOrEmpty(homeEnv)
-    ? Path.Combine(homeEnv, "data")
+    ? Path.Combine(homeEnv, "site", "wwwroot", "App_Data")
     : Path.Combine(contentRoot, "data");
+    
 var defaultDbPath = Path.Combine(defaultDataPath, "drinkshop.db");
 // 優先使用環境變數 DB_PATH（可在 Azure App Settings 設定），否則使用預設路徑
 var dbFilePath = Environment.GetEnvironmentVariable("DB_PATH") ?? defaultDbPath;
 var dbFolder = Path.GetDirectoryName(dbFilePath)!;
-if (!Directory.Exists(dbFolder))
+
+Console.WriteLine($"DB Folder: {dbFolder}");
+Console.WriteLine($"DB File Path: {dbFilePath}");
+
+// 確保資料夾存在且有權限
+try
 {
-    Directory.CreateDirectory(dbFolder);
+    if (!Directory.Exists(dbFolder))
+    {
+        Console.WriteLine($"Creating database directory: {dbFolder}");
+        Directory.CreateDirectory(dbFolder);
+    }
+    
+    // 檢查是否有寫入權限
+    var testFile = Path.Combine(dbFolder, ".write-test");
+    File.WriteAllText(testFile, DateTime.Now.ToString());
+    File.Delete(testFile);
+    Console.WriteLine($"Write permission test passed for: {dbFolder}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"CRITICAL ERROR: Failed to access database directory: {ex}");
+    throw; // 讓應用程式直接失敗，以便在日誌中顯示錯誤
 }
 
 // Add services to the container.
@@ -93,7 +120,20 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<DrinkShopDbContext>();
-        db.Database.Migrate(); // 如果資料表不存在就自動建立
+        Console.WriteLine($"Attempting to migrate database at {dbFilePath}");
+        
+        // 確保 SQLite 能正常連接
+        Console.WriteLine("Testing database connection...");
+        var canConnect = db.Database.CanConnect();
+        Console.WriteLine($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
+        
+        if (canConnect) {
+            Console.WriteLine("Running migrations...");
+            db.Database.Migrate(); // 如果資料表不存在就自動建立
+            Console.WriteLine("Migrations completed successfully");
+        } else {
+            throw new InvalidOperationException("Cannot connect to the database");
+        }
         
         // 確保有admin用戶
         var adminUser = db.Users.FirstOrDefault(u => u.UserName == "admin");
@@ -130,7 +170,9 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred during database initialization. The application will now shut down.");
+        logger.LogError(ex, "Database initialization error. Details: {Message}", ex.ToString());
+        Console.WriteLine($"FATAL ERROR: Database initialization failed: {ex.Message}");
+        Console.WriteLine(ex.ToString());
         // 重新拋出例外，以防止應用程式在損壞狀態下啟動。
         throw;
     }
