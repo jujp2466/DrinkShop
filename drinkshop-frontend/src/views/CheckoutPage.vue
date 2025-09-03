@@ -90,12 +90,11 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="customerEmail">電子郵件 *</label>
+                  <label for="customerEmail">電子郵件</label>
                   <input
                     id="customerEmail"
                     v-model="orderForm.customerEmail"
                     type="email"
-                    required
                     class="form-input"
                     placeholder="請輸入電子郵件"
                   >
@@ -107,11 +106,10 @@
                 <h3>配送地址</h3>
                 
                 <div class="form-group">
-                  <label for="shippingAddress">地址 *</label>
+                  <label for="shippingAddress">地址</label>
                   <textarea
                     id="shippingAddress"
                     v-model="orderForm.shippingAddress"
-                    required
                     rows="3"
                     class="form-input"
                     placeholder="請輸入詳細地址"
