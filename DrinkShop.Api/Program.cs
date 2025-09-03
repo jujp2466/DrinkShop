@@ -130,8 +130,9 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred during database initialization.");
-        // 根據你的策略，你可能想在這裡讓應用程式失敗，或只是記錄錯誤並繼續
+        logger.LogError(ex, "An error occurred during database initialization. The application will now shut down.");
+        // 重新拋出例外，以防止應用程式在損壞狀態下啟動。
+        throw;
     }
 }
 // ===============================================
