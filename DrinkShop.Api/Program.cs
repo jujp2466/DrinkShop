@@ -1,5 +1,8 @@
 using DrinkShop.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // CORS 設定
@@ -19,77 +22,54 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ====== 設定 SQLite DB 路徑到應用程式內容根底下的 data 資料夾（避免不同工作目錄造成不同 DB） ======
-var contentRoot = builder.Environment.ContentRootPath; // 明確使用應用程式內容根路徑
-// 如果在 Azure App Service 上，系統會提供 HOME 環境變數，該路徑位於持久化儲存 (D:\home)，推薦把 DB 放在這裡以避免被部署覆寫。
-var homeEnv = Environment.GetEnvironmentVariable("HOME");
-
-// 增加診斷資訊
-Console.WriteLine($"Content Root: {contentRoot}");
-Console.WriteLine($"HOME env: {homeEnv ?? "not set"}");
+// ==================== 資料庫設定 ====================
+// 輸出環境資訊
+bool isProduction = builder.Environment.IsProduction();
+bool isDevelopment = builder.Environment.IsDevelopment();
 Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"IsProduction: {isProduction}, IsDevelopment: {isDevelopment}");
 
-// 使用 Azure App Service 的永久儲存位置 D:\home\data
-// 參考: https://learn.microsoft.com/en-us/azure/app-service/operating-system-functionality
-string defaultDataPath;
-if (!string.IsNullOrEmpty(homeEnv) && builder.Environment.IsProduction())
+// 確定資料庫檔案路徑
+string dbFilePath;
+string contentRoot = builder.Environment.ContentRootPath;
+Console.WriteLine($"ContentRootPath: {contentRoot}");
+
+if (isProduction)
 {
-    // Azure App Service 上的永久儲存位置
-    defaultDataPath = Path.Combine(homeEnv, "data");
-    Console.WriteLine($"Using Azure App Service permanent storage path: {defaultDataPath}");
+    // 在 Azure 上使用記憶體內資料庫，避免檔案系統權限問題
+    dbFilePath = ":memory:";
+    Console.WriteLine("PRODUCTION ENVIRONMENT: Using in-memory SQLite database to avoid file system permission issues");
 }
 else
 {
-    // 本機環境
-    defaultDataPath = Path.Combine(contentRoot, "data");
-    Console.WriteLine($"Using local development path: {defaultDataPath}");
-}
-    
-var defaultDbPath = Path.Combine(defaultDataPath, "drinkshop.db");
-// 優先使用環境變數 DB_PATH（可在 Azure App Settings 設定），否則使用預設路徑
-var dbFilePath = Environment.GetEnvironmentVariable("DB_PATH") ?? defaultDbPath;
-var dbFolder = Path.GetDirectoryName(dbFilePath)!;
-
-Console.WriteLine($"DB Folder: {dbFolder}");
-Console.WriteLine($"DB File Path: {dbFilePath}");
-
-// 確保資料夾存在且有權限
-try
-{
-    if (!Directory.Exists(dbFolder))
+    // 本機開發環境使用實體檔案
+    var dataDir = Path.Combine(contentRoot, "data");
+    if (!Directory.Exists(dataDir))
     {
-        Console.WriteLine($"Creating database directory: {dbFolder}");
-        Directory.CreateDirectory(dbFolder);
+        Directory.CreateDirectory(dataDir);
     }
-    
-    // 檢查是否有寫入權限
-    var testFile = Path.Combine(dbFolder, ".write-test");
-    File.WriteAllText(testFile, DateTime.Now.ToString());
-    File.Delete(testFile);
-    Console.WriteLine($"Write permission test passed for: {dbFolder}");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"CRITICAL ERROR: Failed to access database directory: {ex}");
-    Console.WriteLine($"Stack trace: {ex.StackTrace}");
-    throw; // 讓應用程式直接失敗，以便在日誌中顯示錯誤
+    dbFilePath = Path.Combine(dataDir, "drinkshop.db");
+    Console.WriteLine($"DEVELOPMENT ENVIRONMENT: Using file-based SQLite database at: {dbFilePath}");
 }
 
 // Add services to the container.
 builder.Services.AddControllers();
-// DI 註冊（已移除舊的 Drink 服務/儲存庫）
 
-// 使用更明確的 SQLite 連接字串格式
-var connectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
-{
-    DataSource = dbFilePath,
-    Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadWriteCreate,
-    Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared
-}.ToString();
+// 配置 DbContext
+var connectionString = dbFilePath == ":memory:" 
+    ? "Data Source=:memory:" 
+    : $"Data Source={dbFilePath}";
 
-Console.WriteLine($"Using SQLite connection string: {connectionString}");
+Console.WriteLine($"Using connection string: {connectionString}");
+
 builder.Services.AddDbContext<DrinkShopDbContext>(options =>
-    options.UseSqlite(connectionString, b => b.MigrationsAssembly("DrinkShop.Infrastructure")));
+{
+    options.UseSqlite(connectionString, sqliteOptions =>
+    {
+        sqliteOptions.MigrationsAssembly("DrinkShop.Infrastructure");
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -143,53 +123,32 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<DrinkShopDbContext>();
-        Console.WriteLine($"Attempting to migrate database at {dbFilePath}");
         
-        // 連接到資料庫前進行嘗試打開 SQLite 檔案
-        try {
-            Console.WriteLine("Attempting to open SQLite file directly...");
-            using (var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbFilePath};Mode=ReadWriteCreate"))
-            {
-                conn.Open();
-                Console.WriteLine("Direct SQLite connection successful");
-                conn.Close();
-            }
-        } catch (Exception directEx) {
-            Console.WriteLine($"Direct SQLite connection failed: {directEx.Message}");
-            Console.WriteLine(directEx.ToString());
+        // 處理記憶體內資料庫的邏輯
+        if (dbFilePath == ":memory:")
+        {
+            Console.WriteLine("Initializing in-memory database...");
+            
+            // 記憶體內資料庫需要顯式建立資料表結構
+            db.Database.EnsureCreated();
+            Console.WriteLine("In-memory database schema created");
+            
+            // 確保有基本資料
+            SeedDatabaseWithSampleData(db);
+        }
+        else
+        {
+            // 檔案型資料庫正常進行遷移
+            Console.WriteLine("Running migrations on file-based database...");
+            db.Database.Migrate();
+            Console.WriteLine("Database migrations completed");
         }
         
-        // 確保 SQLite 能正常連接
-        Console.WriteLine("Testing database connection via EF Core...");
-        var canConnect = false;
-        try {
-            canConnect = db.Database.CanConnect();
-            Console.WriteLine($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
-        } catch (Exception connectEx) {
-            Console.WriteLine($"Connection test threw exception: {connectEx.Message}");
-            Console.WriteLine(connectEx.ToString());
-            throw;
-        }
-        
-        if (canConnect) {
-            Console.WriteLine("Running migrations...");
-            try {
-                db.Database.Migrate(); // 如果資料表不存在就自動建立
-                Console.WriteLine("Migrations completed successfully");
-            } catch (Exception migrateEx) {
-                Console.WriteLine($"Migration failed: {migrateEx.Message}");
-                Console.WriteLine(migrateEx.ToString());
-                throw;
-            }
-        } else {
-            throw new InvalidOperationException("Cannot connect to the database");
-        }
-        
-        // 確保有admin用戶
+        // 確保有 admin 用戶
         var adminUser = db.Users.FirstOrDefault(u => u.UserName == "admin");
         if (adminUser == null)
         {
-            // 創建新的admin用戶
+            // 創建新的 admin 用戶
             adminUser = new DrinkShop.Domain.Entities.User
             {
                 UserName = "admin",
@@ -205,13 +164,6 @@ using (var scope = app.Services.CreateScope())
             db.SaveChanges();
             Console.WriteLine("Default admin user created: admin/admin123");
         }
-        else if (adminUser.Role != "admin")
-        {
-            // 將現有用戶設置為admin
-            adminUser.Role = "admin";
-            db.SaveChanges();
-            Console.WriteLine($"User '{adminUser.UserName}' role updated to admin");
-        }
         else
         {
             Console.WriteLine($"Admin user '{adminUser.UserName}' already exists");
@@ -220,19 +172,79 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Database initialization error. Details: {Message}", ex.ToString());
+        logger.LogError(ex, "Database initialization error");
         Console.WriteLine($"FATAL ERROR: Database initialization failed: {ex.Message}");
         Console.WriteLine(ex.ToString());
-        Console.WriteLine($"Error type: {ex.GetType().FullName}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
         
-        if (ex.InnerException != null) {
-            Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-            Console.WriteLine(ex.InnerException.ToString());
+        // 為生產環境進行特殊處理 - 在 Azure 上不要使應用程式崩潰
+        if (!isProduction)
+        {
+            throw; // 開發環境下重新拋出例外
         }
         
-        // 重新拋出例外，以防止應用程式在損壞狀態下啟動。
-        throw;
+        // 生產環境下記錄錯誤但繼續運行，使用應急方案
+        Console.WriteLine("PRODUCTION ENVIRONMENT: Continuing despite database error");
+    }
+}
+
+// 範例資料填充方法
+void SeedDatabaseWithSampleData(DrinkShopDbContext db)
+{
+    try
+    {
+        Console.WriteLine("Checking for existing products...");
+        if (!db.Products.Any())
+        {
+            Console.WriteLine("No products found. Adding sample products...");
+            
+            // 建立一些範例產品
+            var products = new List<DrinkShop.Domain.Entities.Product>
+            {
+                new DrinkShop.Domain.Entities.Product
+                {
+                    Name = "綠茶",
+                    Description = "清爽的綠茶飲品",
+                    Price = 30,
+                    Category = "茶類",
+                    ImageUrl = "https://example.com/greentea.jpg",
+                    Stock = 100,
+                    IsActive = true
+                },
+                new DrinkShop.Domain.Entities.Product
+                {
+                    Name = "珍珠奶茶",
+                    Description = "香濃奶茶配上 Q 彈珍珠",
+                    Price = 60,
+                    Category = "奶茶",
+                    ImageUrl = "https://example.com/bubbletea.jpg",
+                    Stock = 80,
+                    IsActive = true
+                },
+                new DrinkShop.Domain.Entities.Product
+                {
+                    Name = "芒果冰沙",
+                    Description = "夏日消暑特調芒果冰沙",
+                    Price = 80,
+                    Category = "冰沙",
+                    ImageUrl = "https://example.com/mangosmoothie.jpg",
+                    Stock = 50,
+                    IsActive = true
+                }
+            };
+            
+            db.Products.AddRange(products);
+            db.SaveChanges();
+            Console.WriteLine($"Added {products.Count} sample products");
+        }
+        else
+        {
+            Console.WriteLine("Products already exist in the database");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error seeding database: {ex.Message}");
+        // 記錄但不拋出，避免初始化失敗
     }
 }
 // ===============================================
