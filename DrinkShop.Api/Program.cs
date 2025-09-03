@@ -7,21 +7,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        var origins = new List<string>
-        {
-            "https://blue-island-07506ba00.1.azurestaticapps.net"
-        };
-
-        if (builder.Environment.IsDevelopment())
-        {
-            origins.Add("http://localhost:5173");
-            origins.Add("http://localhost:5174");
-        }
-        
-        policy.WithOrigins(origins.ToArray())
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        // 無論環境如何，允許所有必要的域名，避免環境檢測問題
+        policy.WithOrigins(
+                "https://blue-island-07506ba00.1.azurestaticapps.net",
+                "http://localhost:5173",
+                "http://localhost:5174"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
