@@ -30,15 +30,17 @@ Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"IsProduction: {isProduction}, IsDevelopment: {isDevelopment}");
 
 // 確定資料庫檔案路徑
-string dbFilePath;
 string contentRoot = builder.Environment.ContentRootPath;
 Console.WriteLine($"ContentRootPath: {contentRoot}");
 
+// 在 Azure 上使用特殊路徑，這是一個可寫的路徑
+string dbPath;
 if (isProduction)
 {
-    // 在 Azure 上使用記憶體內資料庫，避免檔案系統權限問題
-    dbFilePath = ":memory:";
-    Console.WriteLine("PRODUCTION ENVIRONMENT: Using in-memory SQLite database to avoid file system permission issues");
+    // 在 Azure App Service 上使用 TEMP 目錄，這是可寫的
+    var tempDir = Environment.GetEnvironmentVariable("TEMP") ?? Path.Combine(contentRoot, "App_Data");
+    dbPath = Path.Combine(tempDir, "drinkshop.db");
+    Console.WriteLine($"PRODUCTION: Using Azure App Service TEMP directory for database: {dbPath}");
 }
 else
 {
@@ -48,27 +50,39 @@ else
     {
         Directory.CreateDirectory(dataDir);
     }
-    dbFilePath = Path.Combine(dataDir, "drinkshop.db");
-    Console.WriteLine($"DEVELOPMENT ENVIRONMENT: Using file-based SQLite database at: {dbFilePath}");
+    dbPath = Path.Combine(dataDir, "drinkshop.db");
+    Console.WriteLine($"DEVELOPMENT: Using file-based SQLite database at: {dbPath}");
+}
+
+// 確保目錄存在
+var dbDir = Path.GetDirectoryName(dbPath);
+if (!Directory.Exists(dbDir))
+{
+    Directory.CreateDirectory(dbDir);
+    Console.WriteLine($"Created database directory: {dbDir}");
 }
 
 // Add services to the container.
 builder.Services.AddControllers();
 
-// 配置 DbContext
-var connectionString = dbFilePath == ":memory:" 
-    ? "Data Source=:memory:" 
-    : $"Data Source={dbFilePath}";
+// 配置 DbContext - 使用 SQLite 共享快取模式
+var connectionString = new SqliteConnectionStringBuilder
+{
+    DataSource = dbPath,
+    Mode = SqliteOpenMode.ReadWriteCreate,
+    Cache = SqliteCacheMode.Shared
+}.ToString();
 
 Console.WriteLine($"Using connection string: {connectionString}");
 
+// 使用連接池模式，確保可靠性
 builder.Services.AddDbContext<DrinkShopDbContext>(options =>
 {
     options.UseSqlite(connectionString, sqliteOptions =>
     {
         sqliteOptions.MigrationsAssembly("DrinkShop.Infrastructure");
     });
-});
+}, ServiceLifetime.Scoped);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -82,7 +96,7 @@ app.UseAuthentication(); // 如果有使用
 app.UseAuthorization();
 
 // Log actual DB path for debugging
-Console.WriteLine($"Using database file: {dbFilePath}");
+Console.WriteLine($"Using database file: {dbPath}");
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
