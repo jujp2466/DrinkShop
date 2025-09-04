@@ -145,7 +145,6 @@ export default {
     
     function checkAuth() {
       const userStr = localStorage.getItem('user');
-      console.log('Stored user data:', userStr);
       
       if (!userStr) {
         alert('請先登入才能訪問管理後台');
@@ -164,10 +163,8 @@ export default {
         
         if (normalized.role === 'admin') {
           currentUser.value = normalized;
-          console.log('Admin access granted!');
           return true;
         } else {
-          console.log('User role check failed. Role:', normalized.role);
           alert(`需要管理員權限才能訪問此頁面。當前角色: ${normalized.role || 'undefined'}`);
           window.location.href = '/';
           return false;

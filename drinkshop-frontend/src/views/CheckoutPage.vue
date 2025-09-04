@@ -63,30 +63,27 @@
               <div class="form-section">
                 <h3>收件人資訊</h3>
                 
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="customerName">姓名 *</label>
-                    <input
-                      id="customerName"
-                      v-model="orderForm.customerName"
-                      type="text"
-                      required
-                      class="form-input"
-                      placeholder="請輸入收件人姓名"
-                    >
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="customerPhone">電話 *</label>
-                    <input
-                      id="customerPhone"
-                      v-model="orderForm.customerPhone"
-                      type="tel"
-                      required
-                      class="form-input"
-                      placeholder="請輸入聯絡電話"
-                    >
-                  </div>
+                <div class="form-group">
+                  <label for="customerName">姓名 *</label>
+                  <input
+                    id="customerName"
+                    v-model="orderForm.customerName"
+                    type="text"
+                    required
+                    class="form-input"
+                    placeholder="請輸入收件人姓名"
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="customerPhone">電話 *</label>
+                  <input
+                    id="customerPhone"
+                    v-model="orderForm.customerPhone"
+                    type="tel"
+                    required
+                    class="form-input"
+                    placeholder="請輸入聯絡電話"
+                  >
                 </div>
 
                 <div class="form-group">
@@ -128,10 +125,11 @@
                       type="radio"
                       value="credit-card"
                       name="payment"
+                      disabled
                     >
                     <span class="radio-custom"></span>
                     <i class="fas fa-credit-card"></i>
-                    信用卡
+                    <del>信用卡</del>
                   </label>
                   
                   <label class="payment-option">
@@ -140,10 +138,11 @@
                       type="radio"
                       value="bank-transfer"
                       name="payment"
+                      disabled
                     >
                     <span class="radio-custom"></span>
                     <i class="fas fa-university"></i>
-                    銀行轉帳
+                    <del>銀行轉帳</del>
                   </label>
                   
                   <label class="payment-option">
@@ -152,11 +151,24 @@
                       type="radio"
                       value="cash-on-delivery"
                       name="payment"
+                      disabled
                     >
                     <span class="radio-custom"></span>
                     <i class="fas fa-money-bill-wave"></i>
-                    貨到付款
+                    <del>貨到付款</del>
                   </label>
+
+                    <label class="payment-option">
+                      <input
+                        v-model="orderForm.paymentMethod"
+                        type="radio"
+                        value="boss-treat"
+                        name="payment"
+                      >
+                      <span class="radio-custom"></span>
+                      <i class="fas fa-gift"></i>
+                      老闆請客
+                    </label>
                 </div>
               </div>
 
@@ -211,7 +223,7 @@ const orderForm = reactive({
   customerPhone: '',
   customerEmail: authStore.currentUser?.email || '',
   shippingAddress: '',
-  paymentMethod: 'credit-card',
+  paymentMethod: 'boss-treat',
   notes: ''
 })
 

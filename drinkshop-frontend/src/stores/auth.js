@@ -92,13 +92,15 @@ export const useAuthStore = defineStore('auth', {
           Phone: userData.phone,
           IsActive: userData.isActive
         }
-        await axios.post(`${API_BASE_URL}/auth/register`, payload)
+        const response = await api.post('/auth/register', payload)
+
         // 註冊成功後自動登入
         return await this.login({
           username: payload.UserName,
           password: payload.Password
         })
       } catch (error) {
+        console.error('Register API call failed:', error);
         this.error = error.response?.data?.message || '註冊失敗'
         return { success: false, error: this.error }
       } finally {

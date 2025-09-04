@@ -21,7 +21,7 @@
       <!-- 用戶操作區 -->
       <div class="user-actions">
         <div v-if="authStore.isAuthenticated" class="user-info">
-          <span>歡迎，{{ authStore.currentUser?.username }}</span>
+          <span>歡迎，{{ authStore.currentUser?.userName }}</span>
           <button @click="handleLogout" class="btn btn-secondary">登出</button>
         </div>
         <div v-else>
@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import CartSidebar from '@/components/CartSidebar.vue'
@@ -69,13 +69,14 @@ onMounted(() => {
   cartStore.initCart()
 })
 
+watch(() => authStore.currentUser, (val) => {
+})
+
 const handleLogout = () => {
   authStore.logout()
 }
 
 const openLoginModal = () => {
-  console.log('openLoginModal 被點擊了')
-  console.log('authModalsRef.value:', authModalsRef.value)
   if (authModalsRef.value) {
     authModalsRef.value.openLogin()
   } else {
