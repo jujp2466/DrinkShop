@@ -21,7 +21,7 @@
       <!-- 用戶操作區 -->
       <div class="user-actions">
         <div v-if="authStore.isAuthenticated" class="user-info">
-          <span>歡迎，{{ authStore.currentUser?.username }}</span>
+          <span>歡迎，{{ authStore.currentUser?.userName }}</span>
           <button @click="handleLogout" class="btn btn-secondary">登出</button>
         </div>
         <div v-else>

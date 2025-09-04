@@ -150,7 +150,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import emitter from '@/eventBus'
 import { useProductStore } from '@/stores/product'
 
 const productStore = useProductStore()
@@ -275,6 +276,11 @@ const refreshData = async () => {
 
 onMounted(() => {
   refreshData()
+  emitter.on('order-changed', refreshData)
+})
+
+onUnmounted(() => {
+  emitter.off('order-changed', refreshData)
 })
 
 // 統一圖片來源處理：支援 imageUrl / image / 相對路徑與預設圖；茶類優先用茶圖

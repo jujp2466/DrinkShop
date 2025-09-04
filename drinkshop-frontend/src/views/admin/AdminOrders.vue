@@ -229,6 +229,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import emitter from '@/eventBus'
 import api from '@/api'
 
 const loading = ref(false)
@@ -329,9 +330,10 @@ const refreshOrders = async () => {
 
 const updateOrderStatus = async (order) => {
   try {
-  const payload = { Status: order.status }
-  await api.put(`/orders/${order.id}`, payload)
-  console.log(`訂單 ${order.id} 狀態已更新為 ${order.status}`)
+    const payload = { Status: order.status }
+    await api.put(`/orders/${order.id}`, payload)
+    console.log(`訂單 ${order.id} 狀態已更新為 ${order.status}`)
+    emitter.emit('order-changed')
   } catch (error) {
     console.error('更新訂單狀態失敗:', error)
     alert('更新訂單狀態失敗')
@@ -346,10 +348,11 @@ const viewOrder = (order) => {
 const deleteOrder = async (order) => {
   if (confirm(`確定要刪除訂單 #${String(order.id).slice(-8)} 嗎？`)) {
     try {
-  await api.delete(`/orders/${order.id}`)
-  const index = orders.value.findIndex(o => o.id === order.id)
-  if (index !== -1) orders.value.splice(index, 1)
-  alert('訂單已刪除')
+      await api.delete(`/orders/${order.id}`)
+      const index = orders.value.findIndex(o => o.id === order.id)
+      if (index !== -1) orders.value.splice(index, 1)
+      alert('訂單已刪除')
+      emitter.emit('order-changed')
     } catch (error) {
       console.error('刪除訂單失敗:', error)
       alert('刪除訂單失敗')
