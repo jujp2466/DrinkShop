@@ -24,9 +24,23 @@ namespace DrinkShop.Infrastructure.Repositories
             return await _context.Orders.Where(o => o.UserId == userId)
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
+                .Include(o => o.User)
                 .Select(o => new OrderDto { 
                     Id = o.Id, 
                     UserId = o.UserId, 
+                    // map User info when available
+                    User = o.User == null ? null : new UserDto {
+                        Id = o.User.Id,
+                        UserName = o.User.UserName,
+                        Email = o.User.Email,
+                        Role = o.User.Role,
+                        Address = o.User.Address,
+                        Phone = o.User.Phone,
+                        IsActive = o.User.IsActive,
+                        Status = o.User.Status,
+                        LastLoginAt = o.User.LastLoginAt,
+                        CreatedAt = o.User.CreatedAt
+                    },
                     TotalAmount = o.TotalAmount, 
                     Status = o.Status, 
                     CreatedAt = o.CreatedAt,
@@ -47,10 +61,23 @@ namespace DrinkShop.Infrastructure.Repositories
             return await _context.Orders
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
+                .Include(o => o.User)
                 .Select(o => new OrderDto
                 {
                     Id = o.Id,
                     UserId = o.UserId,
+                    User = o.User == null ? null : new UserDto {
+                        Id = o.User.Id,
+                        UserName = o.User.UserName,
+                        Email = o.User.Email,
+                        Role = o.User.Role,
+                        Address = o.User.Address,
+                        Phone = o.User.Phone,
+                        IsActive = o.User.IsActive,
+                        Status = o.User.Status,
+                        LastLoginAt = o.User.LastLoginAt,
+                        CreatedAt = o.User.CreatedAt
+                    },
                     TotalAmount = o.TotalAmount,
                     Status = o.Status,
                     CreatedAt = o.CreatedAt,
@@ -78,6 +105,18 @@ namespace DrinkShop.Infrastructure.Repositories
             return new OrderDto { 
                 Id = order.Id, 
                 UserId = order.UserId, 
+                User = order.User == null ? null : new UserDto {
+                    Id = order.User.Id,
+                    UserName = order.User.UserName,
+                    Email = order.User.Email,
+                    Role = order.User.Role,
+                    Address = order.User.Address,
+                    Phone = order.User.Phone,
+                    IsActive = order.User.IsActive,
+                    Status = order.User.Status,
+                    LastLoginAt = order.User.LastLoginAt,
+                    CreatedAt = order.User.CreatedAt
+                },
                 TotalAmount = order.TotalAmount, 
                 Status = order.Status, 
                 CreatedAt = order.CreatedAt,

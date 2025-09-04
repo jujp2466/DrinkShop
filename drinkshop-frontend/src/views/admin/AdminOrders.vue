@@ -299,7 +299,8 @@ const mapOrder = (o) => ({
   id: o.id ?? o.Id ?? '',
   userId: o.userId ?? o.UserId ?? '',
   user: o.user ?? {},
-  customerName: o.user?.name ?? o.user?.username ?? o.customerName ?? o.CustomerName ?? '未知客戶',
+  // 支援不同命名（UserDto.UserName -> JSON 可能為 userName）
+  customerName: o.user?.name ?? o.user?.userName ?? o.user?.username ?? o.customerName ?? o.CustomerName ?? '未知客戶',
   customerPhone: o.user?.phone ?? o.customerPhone ?? o.CustomerPhone ?? '',
   customerEmail: o.user?.email ?? o.customerEmail ?? o.CustomerEmail ?? '',
   shippingAddress: o.shippingAddress ?? o.ShippingAddress ?? '',
