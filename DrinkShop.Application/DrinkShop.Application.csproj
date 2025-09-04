@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\DrinkShop.Domain\DrinkShop.Domain.csproj" />
-    <ProjectReference Include="..\DrinkShop.Infrastructure\DrinkShop.Infrastructure.csproj" />
+  <ProjectReference Include="..\DrinkShop.Domain\DrinkShop.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
