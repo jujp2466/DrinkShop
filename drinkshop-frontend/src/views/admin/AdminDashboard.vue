@@ -213,6 +213,11 @@ const fetchApi = async (endpoint) => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
+    const contentType = response.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Expected JSON but received ${contentType}`)
+    }
+    
     return await response.json()
   } catch (error) {
     console.error(`API call failed for ${endpoint}:`, error)

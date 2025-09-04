@@ -15,17 +15,18 @@ namespace DrinkShop.Api.Controllers
         }
 
 
-            /// <summary>
-            /// 取得所有使用者
-            /// </summary>
-            [HttpGet]
-            public async Task<IActionResult> GetAll()
-            {
-                var result = await _service.GetAllAsync();
-                return Ok(new { code = 200, message = "Success", data = result });
-            }
-
-
+        /// <summary>
+        /// 取得所有使用者
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] string? role = null)
+        {
+            var result = await _service.GetAllAsync();
+            
+            // 如果指定了 role 參數，可以在這裡處理篩選邏輯
+            // 目前為了簡化，忽略 role 參數，直接返回所有用戶
+            return Ok(new { code = 200, message = "Success", data = result });
+        }
         /// <summary>
         /// 更新使用者資料
         /// </summary>
