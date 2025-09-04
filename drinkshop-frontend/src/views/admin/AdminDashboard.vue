@@ -153,6 +153,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import emitter from '@/eventBus'
 import { useProductStore } from '@/stores/product'
+import api from '@/api'
 
 const productStore = useProductStore()
 
@@ -195,30 +196,11 @@ const formatDate = (dateString) => {
   }
 }
 
-// API 基礎 URL
-const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5249/api/v1' : '/api/v1'
-
-// API 請求函數
+// API 請求函數（使用配置好的 axios 實例）
 const fetchApi = async (endpoint) => {
   try {
-    const token = localStorage.getItem('token')
-    const response = await fetch(`${apiBase}${endpoint}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const contentType = response.headers.get('content-type')
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error(`Expected JSON but received ${contentType}`)
-    }
-    
-    return await response.json()
+    const response = await api.get(endpoint)
+    return response.data
   } catch (error) {
     console.error(`API call failed for ${endpoint}:`, error)
     throw error
