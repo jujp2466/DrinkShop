@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-  <ProjectReference Include="..\DrinkShop.Domain\DrinkShop.Domain.csproj" />
+    <ProjectReference Include="..\DrinkShop.Domain\DrinkShop.Domain.csproj" />
+    <ProjectReference Include="..\DrinkShop.Infrastructure\DrinkShop.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -10,7 +11,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-  <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
