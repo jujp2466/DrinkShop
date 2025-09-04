@@ -58,7 +58,7 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: drinkshop-c5ccheftavfvh0av
+          app-name: DrinkShop
           package: ${{ env.PUBLISH_DIR }}
 
       # 9️⃣ Swagger 熱身（可選）
