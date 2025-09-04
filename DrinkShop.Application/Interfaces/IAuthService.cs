@@ -5,7 +5,13 @@ namespace DrinkShop.Application.Interfaces
 {
     public interface IAuthService
     {
-        Task<UserDto?> RegisterAsync(RegisterDto dto);
-        Task<UserDto?> LoginAsync(LoginDto dto);
+    /// <summary>
+    /// 使用者註冊
+    /// </summary>
+    Task<UserDto?> RegisterAsync(RegisterDto dto);
+    /// <summary>
+    /// 使用者登入
+    /// </summary>
+    Task<UserDto?> LoginAsync(LoginDto dto);
     }
 }

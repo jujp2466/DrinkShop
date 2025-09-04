@@ -7,10 +7,10 @@ namespace DrinkShop.Infrastructure
     {
         public DrinkShopDbContext(DbContextOptions<DrinkShopDbContext> options) : base(options) { }
 
-        public DbSet<User> Users => Set<User>();
-        public DbSet<Product> Products => Set<Product>();
-        public DbSet<Order> Orders => Set<Order>();
-        public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,7 +34,8 @@ namespace DrinkShop.Infrastructure
                 e.Property(x => x.CreatedAt).HasColumnName("createdAt").HasDefaultValueSql("CURRENT_TIMESTAMP");
                 e.HasIndex(x => x.UserName).IsUnique();
                 e.HasIndex(x => x.Email).IsUnique();
-            });            // Products -> products
+            });
+            // Products -> products
             modelBuilder.Entity<Product>(e =>
             {
                 e.ToTable("products");

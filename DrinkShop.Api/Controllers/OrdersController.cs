@@ -14,15 +14,21 @@ namespace DrinkShop.Api.Controllers
             _service = service;
         }
 
-        // POST /api/v1/orders
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
-        {
-            var order = await _service.CreateAsync(dto);
-            return Ok(new { code = 200, message = "Created", data = new { orderId = order.Id } });
-        }
 
-        // GET /api/v1/orders?userId=123&role=admin|user
+            /// <summary>
+            /// 新增訂單
+            /// </summary>
+            [HttpPost]
+            public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+            {
+                var order = await _service.CreateAsync(dto);
+                return Ok(new { code = 200, message = "Created", data = new { orderId = order.Id } });
+            }
+
+
+        /// <summary>
+        /// 取得訂單列表（可依使用者或角色篩選）
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] int? userId, [FromQuery] string? role)
         {
@@ -30,7 +36,10 @@ namespace DrinkShop.Api.Controllers
             return Ok(new { code = 200, message = "Success", data = orders });
         }
 
-        // PUT /api/v1/orders/{id}
+
+        /// <summary>
+        /// 更新訂單狀態
+        /// </summary>
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] OrderDto updated)
         {
@@ -39,7 +48,10 @@ namespace DrinkShop.Api.Controllers
             return Ok(new { code = 200, message = "Updated", data = new { order.Id } });
         }
 
-        // DELETE /api/v1/orders/{id}
+
+        /// <summary>
+        /// 刪除訂單
+        /// </summary>
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {

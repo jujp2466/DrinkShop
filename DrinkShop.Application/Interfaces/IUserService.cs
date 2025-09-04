@@ -6,8 +6,17 @@ namespace DrinkShop.Application.Interfaces
 {
     public interface IUserService
     {
-        Task<IEnumerable<UserDto>> GetAllAsync();
-        Task<UserDto?> UpdateAsync(int id, UserDto update);
-        Task<bool> DeleteAsync(int id);
+    /// <summary>
+    /// 取得所有使用者
+    /// </summary>
+    Task<IEnumerable<UserDto>> GetAllAsync();
+    /// <summary>
+    /// 更新使用者資料
+    /// </summary>
+    Task<UserDto?> UpdateAsync(int id, UserDto update);
+    /// <summary>
+    /// 刪除使用者
+    /// </summary>
+    Task<bool> DeleteAsync(int id);
     }
 }

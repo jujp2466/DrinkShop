@@ -14,15 +14,21 @@ namespace DrinkShop.Api.Controllers
             _service = service;
         }
 
-        // GET /api/v1/users
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var result = await _service.GetAllAsync();
-            return Ok(new { code = 200, message = "Success", data = result });
-        }
 
-        // PUT /api/v1/users/{id}
+            /// <summary>
+            /// 取得所有使用者
+            /// </summary>
+            [HttpGet]
+            public async Task<IActionResult> GetAll()
+            {
+                var result = await _service.GetAllAsync();
+                return Ok(new { code = 200, message = "Success", data = result });
+            }
+
+
+        /// <summary>
+        /// 更新使用者資料
+        /// </summary>
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] UserDto update)
         {
@@ -31,7 +37,10 @@ namespace DrinkShop.Api.Controllers
             return Ok(new { code = 200, message = "Updated", data = new { user.Id } });
         }
 
-        // DELETE /api/v1/users/{id}
+
+        /// <summary>
+        /// 刪除使用者
+        /// </summary>
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {

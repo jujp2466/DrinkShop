@@ -14,15 +14,21 @@ namespace DrinkShop.Api.Controllers
             _service = service;
         }
 
-        // GET /api/v1/products
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var products = await _service.GetAllAsync();
-            return Ok(new { code = 200, message = "Success", data = products });
-        }
 
-        // GET /api/v1/products/{id}
+            /// <summary>
+            /// 取得所有商品
+            /// </summary>
+            [HttpGet]
+            public async Task<IActionResult> GetAll()
+            {
+                var products = await _service.GetAllAsync();
+                return Ok(new { code = 200, message = "Success", data = products });
+            }
+
+
+        /// <summary>
+        /// 依商品編號取得商品
+        /// </summary>
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -31,7 +37,10 @@ namespace DrinkShop.Api.Controllers
             return Ok(new { code = 200, message = "Success", data = product });
         }
 
-        // POST /api/v1/products
+
+        /// <summary>
+        /// 新增商品
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductDto input)
         {
@@ -39,7 +48,10 @@ namespace DrinkShop.Api.Controllers
             return Ok(new { code = 200, message = "Created", data = product });
         }
 
-        // PUT /api/v1/products/{id}
+
+        /// <summary>
+        /// 更新商品
+        /// </summary>
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] ProductDto input)
         {
@@ -48,7 +60,10 @@ namespace DrinkShop.Api.Controllers
             return Ok(new { code = 200, message = "Updated", data = product });
         }
 
-        // DELETE /api/v1/products/{id}
+
+        /// <summary>
+        /// 刪除商品
+        /// </summary>
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {

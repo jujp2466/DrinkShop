@@ -1,6 +1,7 @@
 using DrinkShop.Application.Interfaces;
 using DrinkShop.Application.Services;
 using DrinkShop.Infrastructure;
+using DrinkShop.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 
@@ -69,6 +70,12 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Repository DI 註冊
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
 // 配置 DbContext - 使用 SQLite 共享快取模式
 var connectionString = new SqliteConnectionStringBuilder

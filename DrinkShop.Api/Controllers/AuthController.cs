@@ -14,15 +14,22 @@ namespace DrinkShop.Api.Controllers
             _service = service;
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
-        {
-            var user = await _service.RegisterAsync(dto);
-            if (user == null)
-                return BadRequest(new { code = 400, message = "用戶名或郵箱已存在" });
-            return Ok(new { code = 200, message = "Registered", data = new { user.Id, user.UserName, user.Role, user.Address, user.Phone, user.IsActive, user.Status } });
-        }
 
+            /// <summary>
+            /// 使用者註冊
+            /// </summary>
+            [HttpPost("register")]
+            public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+            {
+                var user = await _service.RegisterAsync(dto);
+                if (user == null)
+                    return BadRequest(new { code = 400, message = "用戶名或郵箱已存在" });
+                return Ok(new { code = 200, message = "Registered", data = new { user.Id, user.UserName, user.Role, user.Address, user.Phone, user.IsActive, user.Status } });
+            }
+
+        /// <summary>
+        /// 使用者登入
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {

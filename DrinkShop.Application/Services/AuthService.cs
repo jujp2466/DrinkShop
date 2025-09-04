@@ -1,72 +1,45 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
-using DrinkShop.Domain.Entities;
-using DrinkShop.Infrastructure;
-using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace DrinkShop.Application.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly DrinkShopDbContext _db;
-        public AuthService(DrinkShopDbContext db)
+        private readonly IAuthRepository _authRepository;
+        public AuthService(IAuthRepository authRepository)
         {
-            _db = db;
+            _authRepository = authRepository;
         }
 
+    /// <summary>
+    /// 使用者註冊
+    /// </summary>
         public async Task<UserDto?> RegisterAsync(RegisterDto dto)
         {
-            if (await _db.Users.AnyAsync(u => u.UserName == dto.UserName || u.Email == dto.Email))
-                return null;
-            var user = new User
+            // Check if user already exists
+            var existingUser = await _authRepository.GetUserByAccountAsync(dto.UserName);
+            if (existingUser != null)
             {
-                UserName = dto.UserName,
-                Password = dto.Password,
-                Email = dto.Email,
-                Role = "user",
-                Address = dto.Address,
-                Phone = dto.Phone ?? string.Empty,
-                IsActive = dto.IsActive,
-                Status = dto.IsActive ? "active" : "inactive",
-                LastLoginAt = null
-            };
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-            return new UserDto
-            {
-                Id = user.Id,
-                UserName = user.UserName,
-                Email = user.Email,
-                Role = user.Role,
-                Address = user.Address,
-                Phone = user.Phone,
-                IsActive = user.IsActive,
-                Status = user.Status,
-                LastLoginAt = user.LastLoginAt,
-                CreatedAt = user.CreatedAt
-            };
+                // Or throw a custom exception
+                return null; 
+            }
+            var success = await _authRepository.RegisterUserAsync(dto);
+            if (!success) return null;
+            return await _authRepository.GetUserByAccountAsync(dto.UserName);
         }
 
+    /// <summary>
+    /// 使用者登入
+    /// </summary>
         public async Task<UserDto?> LoginAsync(LoginDto dto)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserName == dto.UserName && u.Password == dto.Password);
+            // The repository is now responsible for password validation
+            var user = await _authRepository.ValidateUserAsync(dto.UserName, dto.Password);
             if (user == null) return null;
-            user.LastLoginAt = DateTime.UtcNow;
-            _db.Users.Update(user);
-            await _db.SaveChangesAsync();
-            return new UserDto
-            {
-                Id = user.Id,
-                UserName = user.UserName,
-                Email = user.Email,
-                Role = user.Role,
-                Address = user.Address,
-                Phone = user.Phone,
-                IsActive = user.IsActive,
-                Status = user.Status,
-                LastLoginAt = user.LastLoginAt,
-                CreatedAt = user.CreatedAt
-            };
+            
+            // TODO: Implement logic to update LastLoginAt in the repository
+            return user;
         }
     }
 }

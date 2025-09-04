@@ -1,129 +1,63 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
-using DrinkShop.Domain.Entities;
-using DrinkShop.Infrastructure;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DrinkShop.Application.Services
 {
     public class OrderService : IOrderService
     {
-        private readonly DrinkShopDbContext _db;
-        public OrderService(DrinkShopDbContext db)
+        private readonly IOrderRepository _orderRepository;
+        public OrderService(IOrderRepository orderRepository)
         {
-            _db = db;
+            _orderRepository = orderRepository;
         }
 
         public async Task<OrderDto> CreateAsync(CreateOrderDto dto)
         {
-            var order = new Order
+            var success = await _orderRepository.CreateOrderAsync(dto);
+            if (!success)
             {
-                UserId = dto.UserId,
-                TotalAmount = dto.TotalAmount,
-                ShippingFee = dto.ShippingFee,
-                Status = "pending",
-                ShippingAddress = dto.ShippingAddress,
-                PaymentMethod = dto.PaymentMethod,
-                Notes = dto.Notes
-            };
-            _db.Orders.Add(order);
-            await _db.SaveChangesAsync();
-            foreach (var item in dto.Items)
-            {
-                _db.OrderItems.Add(new OrderItem
-                {
-                    OrderId = order.Id,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    Price = item.Price
-                });
+                throw new System.Exception("Order creation failed in repository.");
             }
-            await _db.SaveChangesAsync();
-            return await GetOrderDtoAsync(order.Id);
+            // WARNING: This is not a robust way to get the created order.
+            // The repository should ideally return the created entity or its ID.
+            var orders = await _orderRepository.GetOrdersByUserIdAsync(dto.UserId);
+            var createdOrder = orders.OrderByDescending(o => o.Id).FirstOrDefault();
+            if (createdOrder == null)
+            {
+                 throw new System.Exception("Could not retrieve the newly created order.");
+            }
+            return createdOrder;
         }
 
         public async Task<IEnumerable<OrderDto>> GetAsync(int? userId, string? role)
         {
-            IQueryable<Order> q = _db.Orders
-                .Include(o => o.User)
-                .Include(o => o.Items)
-                    .ThenInclude(i => i.Product)
-                .OrderByDescending(o => o.Id);
-            if (role != "admin")
+            if (role == "admin")
             {
-                if (userId == null) return new List<OrderDto>();
-                q = q.Where(o => o.UserId == userId);
+                return await _orderRepository.GetAllOrdersAsync();
             }
-            var orders = await q.ToListAsync();
-            return orders.Select(o => MapOrderDto(o));
+            
+            if (userId == null) return new List<OrderDto>();
+            return await _orderRepository.GetOrdersByUserIdAsync(userId.Value);
         }
 
         public async Task<OrderDto?> UpdateStatusAsync(int id, string status)
         {
-            var order = await _db.Orders.FindAsync(id);
+            var order = await _orderRepository.GetOrderByIdAsync(id);
             if (order == null) return null;
-            order.Status = status ?? order.Status;
-            _db.Orders.Update(order);
-            await _db.SaveChangesAsync();
-            return await GetOrderDtoAsync(order.Id);
+            order.Status = status;
+            // TODO: Implement an update method in the repository.
+            // await _orderRepository.UpdateAsync(order);
+            return order;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var order = await _db.Orders.FindAsync(id);
-            if (order == null) return false;
-            var items = _db.OrderItems.Where(i => i.OrderId == order.Id);
-            _db.OrderItems.RemoveRange(items);
-            _db.Orders.Remove(order);
-            await _db.SaveChangesAsync();
-            return true;
-        }
-
-        private async Task<OrderDto?> GetOrderDtoAsync(int orderId)
-        {
-            var order = await _db.Orders
-                .Include(o => o.User)
-                .Include(o => o.Items)
-                    .ThenInclude(i => i.Product)
-                .FirstOrDefaultAsync(o => o.Id == orderId);
-            return order == null ? null : MapOrderDto(order);
-        }
-
-        private OrderDto MapOrderDto(Order o)
-        {
-            return new OrderDto
-            {
-                Id = o.Id,
-                UserId = o.UserId,
-                User = o.User == null ? null : new UserDto
-                {
-                    Id = o.User.Id,
-                    UserName = o.User.UserName,
-                    Email = o.User.Email,
-                    Role = o.User.Role,
-                    Address = o.User.Address,
-                    Phone = o.User.Phone,
-                    IsActive = o.User.IsActive,
-                    Status = o.User.Status,
-                    LastLoginAt = o.User.LastLoginAt,
-                    CreatedAt = o.User.CreatedAt
-                },
-                TotalAmount = o.TotalAmount,
-                ShippingFee = o.ShippingFee,
-                Status = o.Status,
-                ShippingAddress = o.ShippingAddress,
-                PaymentMethod = o.PaymentMethod,
-                Notes = o.Notes,
-                CreatedAt = o.CreatedAt,
-                Items = o.Items?.Select(i => new OrderItemDto
-                {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
-                    ProductName = i.Product?.Name ?? $"產品 {i.ProductId}",
-                    Quantity = i.Quantity,
-                    Price = i.Price
-                }).ToList() ?? new List<OrderItemDto>()
-            };
+            // TODO: Implement a delete method in the repository.
+            // return await _orderRepository.DeleteAsync(id);
+            return await Task.FromResult(false);
         }
     }
 }

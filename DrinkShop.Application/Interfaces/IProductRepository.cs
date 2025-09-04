@@ -1,0 +1,33 @@
+using DrinkShop.Application.DTOs;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace DrinkShop.Application.Interfaces
+{
+    /// <summary>
+    /// 商品資料存取介面
+    /// </summary>
+    public interface IProductRepository
+    {
+        /// <summary>
+        /// 取得所有商品
+        /// </summary>
+        Task<IEnumerable<ProductDto>> GetAllAsync();
+        /// <summary>
+        /// 依商品編號取得商品
+        /// </summary>
+        Task<ProductDto?> GetByIdAsync(int id);
+        /// <summary>
+        /// 新增商品
+        /// </summary>
+        Task<ProductDto> CreateAsync(ProductDto input);
+        /// <summary>
+        /// 更新商品
+        /// </summary>
+        Task<ProductDto?> UpdateAsync(int id, ProductDto input);
+        /// <summary>
+        /// 刪除商品
+        /// </summary>
+        Task<bool> DeleteAsync(int id);
+    }
+}

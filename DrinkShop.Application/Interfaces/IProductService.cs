@@ -6,10 +6,25 @@ namespace DrinkShop.Application.Interfaces
 {
     public interface IProductService
     {
-        Task<IEnumerable<ProductDto>> GetAllAsync();
-        Task<ProductDto?> GetByIdAsync(int id);
-        Task<ProductDto> CreateAsync(ProductDto input);
-        Task<ProductDto?> UpdateAsync(int id, ProductDto input);
-        Task<bool> DeleteAsync(int id);
+    /// <summary>
+    /// 取得所有商品
+    /// </summary>
+    Task<IEnumerable<ProductDto>> GetAllAsync();
+    /// <summary>
+    /// 依商品編號取得商品
+    /// </summary>
+    Task<ProductDto?> GetByIdAsync(int id);
+    /// <summary>
+    /// 新增商品
+    /// </summary>
+    Task<ProductDto> CreateAsync(ProductDto input);
+    /// <summary>
+    /// 更新商品
+    /// </summary>
+    Task<ProductDto?> UpdateAsync(int id, ProductDto input);
+    /// <summary>
+    /// 刪除商品
+    /// </summary>
+    Task<bool> DeleteAsync(int id);
     }
 }
