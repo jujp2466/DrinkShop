@@ -100,6 +100,17 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "DrinkShop API V1");
         c.RoutePrefix = "swagger";
     });
+    
+    // 自動導向 swagger 首頁
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path == "/" || context.Request.Path == "/index.html")
+        {
+            context.Response.Redirect("/swagger/index.html");
+            return;
+        }
+        await next();
+    });
 }
 
 if (!app.Environment.IsDevelopment())
