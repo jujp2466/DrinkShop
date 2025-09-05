@@ -10,4 +10,6 @@ const baseURL = envBase
   ? 'http://localhost:5249/api/v1'
   : 'https://drinkshop-c5ccheftavfvh0av.japaneast-01.azurewebsites.net/api/v1';
 
-export default axios.create({ baseURL });
+const api = axios.create({ baseURL });
+export default api;
+export { api };
