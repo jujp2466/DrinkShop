@@ -24,14 +24,15 @@ namespace DrinkShop.Infrastructure.Repositories
             return await _context.Users.Select(u => new UserDto { 
                 Id = u.Id, 
                 UserName = u.UserName, 
+                DisplayName = string.IsNullOrWhiteSpace(u.UserName) ? (string.IsNullOrWhiteSpace(u.Email) ? (u.Address ?? "") : u.Email) : u.UserName,
                 Email = u.Email,
                 Role = u.Role,
                 Phone = u.Phone,
                 IsActive = u.IsActive,
                 Address = u.Address,
                 Status = u.Status,
-                LastLoginAt = u.LastLoginAt,
-                CreatedAt = u.CreatedAt
+                LastLoginAt = u.LastLoginAt.HasValue ? DateTime.SpecifyKind(u.LastLoginAt.Value, DateTimeKind.Utc) : (DateTime?)null,
+                CreatedAt = DateTime.SpecifyKind(u.CreatedAt, DateTimeKind.Utc)
             }).ToListAsync();
         }
 
@@ -42,14 +43,15 @@ namespace DrinkShop.Infrastructure.Repositories
             return new UserDto { 
                 Id = user.Id, 
                 UserName = user.UserName, 
+                DisplayName = string.IsNullOrWhiteSpace(user.UserName) ? (string.IsNullOrWhiteSpace(user.Email) ? (user.Address ?? "") : user.Email) : user.UserName,
                 Email = user.Email,
                 Role = user.Role,
                 Phone = user.Phone,
                 IsActive = user.IsActive,
                 Address = user.Address,
                 Status = user.Status,
-                LastLoginAt = user.LastLoginAt,
-                CreatedAt = user.CreatedAt
+                LastLoginAt = user.LastLoginAt.HasValue ? DateTime.SpecifyKind(user.LastLoginAt.Value, DateTimeKind.Utc) : (DateTime?)null,
+                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc)
             };
         }
     }

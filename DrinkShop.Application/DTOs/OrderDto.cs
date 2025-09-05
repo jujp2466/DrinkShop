@@ -8,6 +8,8 @@ namespace DrinkShop.Application.DTOs
         public int Id { get; set; }
         public int UserId { get; set; }
         public UserDto? User { get; set; }
+        // 統一前端顯示的訂單顧客名稱（來自 User 或 order.customerName）
+        public string DisplayName { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
         public decimal ShippingFee { get; set; }
         public string Status { get; set; } = "pending";

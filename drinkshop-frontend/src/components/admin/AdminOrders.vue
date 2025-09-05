@@ -71,7 +71,7 @@
             <td>
               <span class="order-id">#{{ order.id }}</span>
             </td>
-            <td>{{ order.username || order.user?.username || '未知用戶' }}</td>
+            <td>{{ order.displayName || '未知用戶' }}</td>
             <td class="order-amount">NT$ {{ order.totalAmount?.toLocaleString() || '0' }}</td>
             <td>
               <span class="status-badge" :class="getStatusClass(order.status)">
@@ -151,7 +151,7 @@
                 </div>
                 <div class="info-item">
                   <label>用戶：</label>
-                  <span>{{ currentOrder.username || currentOrder.user?.username || '未知用戶' }}</span>
+                  <span>{{ currentOrder.displayName || '未知用戶' }}</span>
                 </div>
                 <div class="info-item">
                   <label>狀態：</label>
@@ -162,6 +162,10 @@
                 <div class="info-item">
                   <label>總金額：</label>
                   <span class="order-total">NT$ {{ currentOrder.totalAmount?.toLocaleString() || '0' }}</span>
+                </div>
+                <div class="info-item">
+                  <label>運費：</label>
+                  <span>{{ currentOrder.shippingFee === 0 ? '免運' : ('NT$ ' + (currentOrder.shippingFee?.toLocaleString() || '0')) }}</span>
                 </div>
                 <div class="info-item">
                   <label>付款方式：</label>
@@ -246,6 +250,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import api from '../../api'
+import { formatDate } from '@/utils/date'
 
 // 響應式數據
 const loading = ref(true)
@@ -303,21 +308,7 @@ const fetchApi = async (endpoint, options = {}) => {
 }
 
 // 方法
-const formatDate = (dateString) => {
-  if (!dateString) return '未知'
-  try {
-    const date = new Date(dateString)
-    return date.toLocaleString('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch (error) {
-    return '無效日期'
-  }
-}
+// 使用共用日期工具
 
 const getStatusClass = (status) => {
   const statusMap = {
@@ -343,7 +334,16 @@ const loadOrders = async () => {
   try {
     loading.value = true
     const response = await fetchApi('/orders')
-    orders.value = response.data || []
+  // fetchApi 可能回傳 axios 的 response.data 包裝物（例如 { code, msg, data }），
+  // 或是直接回傳資料陣列；兩種回傳格式都需支援。
+    const rawList = response?.data ?? response ?? []
+    orders.value = (rawList || []).map(o => ({
+      // 僅信任後端提供的 displayName（去除前後空白），
+      // 若結果為空字串則轉為 null；同時標準化 shippingFee 欄位（支援 shippingFee / ShippingFee）
+      ...o,
+      displayName: (String(o.displayName ?? '').trim()) || null,
+      shippingFee: o.shippingFee ?? o.ShippingFee ?? 0
+    }))
     filterOrders()
   } catch (error) {
     console.error('Failed to load orders:', error)
@@ -361,8 +361,7 @@ const filterOrders = () => {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(order => 
       order.id.toString().includes(query) ||
-      order.username?.toLowerCase().includes(query) ||
-      order.user?.username?.toLowerCase().includes(query)
+      (order.displayName || '').toLowerCase().includes(query)
     )
   }
   

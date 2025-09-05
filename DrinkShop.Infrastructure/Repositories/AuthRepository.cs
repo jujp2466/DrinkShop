@@ -37,8 +37,8 @@ namespace DrinkShop.Infrastructure.Repositories
                 IsActive = user.IsActive,
                 Address = user.Address,
                 Status = user.Status,
-                LastLoginAt = user.LastLoginAt,
-                CreatedAt = user.CreatedAt
+                LastLoginAt = user.LastLoginAt.HasValue ? DateTime.SpecifyKind(user.LastLoginAt.Value, DateTimeKind.Utc) : (DateTime?)null,
+                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc)
             };
         }
 
@@ -79,6 +79,16 @@ namespace DrinkShop.Infrastructure.Repositories
                 LastLoginAt = user.LastLoginAt,
                 CreatedAt = user.CreatedAt
             };
+        }
+
+        // 更新使用者最後登入時間，將值寫回 DB（以 UTC 儲存）
+        public async Task UpdateLastLoginAsync(int userId, DateTime atUtc)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return;
+            user.LastLoginAt = DateTime.SpecifyKind(atUtc, DateTimeKind.Utc);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
         }
     }
 }

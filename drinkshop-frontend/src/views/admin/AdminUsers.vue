@@ -399,7 +399,8 @@ const loadUsers = async () => {
     const list = res?.data?.data || []
     users.value = list.map(u => ({
       id: (u.id ?? u.Id ?? '').toString(),
-      name: u.username ?? u.Username ?? u.name ?? '',
+      // prefer backend camelCase `userName`, then other variants, then name
+      name: u.userName ?? u.username ?? u.Username ?? u.name ?? '',
       email: u.email ?? u.Email ?? '',
       phone: u.phone ?? null,
       role: (u.role ?? u.Role ?? 'customer'),
@@ -504,17 +505,18 @@ const submitUserForm = async () => {
     if (showCreateUserModal.value) {
       // call register endpoint
       const payload = {
-        Username: userForm.value.name,
-        Password: userForm.value.password,
-        Email: userForm.value.email
+        userName: userForm.value.name,
+        password: userForm.value.password,
+        email: userForm.value.email
       }
       const res = await api.post('/auth/register', payload)
       const newUser = res?.data?.data
       if (newUser) {
         users.value.unshift({
           id: (newUser.Id ?? newUser.id ?? '').toString(),
-          name: newUser.Username ?? newUser.username ?? userForm.value.name,
-          email: newUser.Email ?? userForm.value.email,
+          // backend usually returns camelCase userName
+          name: newUser.userName ?? newUser.UserName ?? newUser.username ?? userForm.value.name,
+          email: newUser.Email ?? newUser.email ?? userForm.value.email,
           phone: userForm.value.phone,
           role: newUser.Role ?? userForm.value.role,
           status: 'active',
@@ -529,12 +531,12 @@ const submitUserForm = async () => {
     } else {
       // update existing user
       const payload = {
-        Username: userForm.value.name,
-        Email: userForm.value.email,
-        Phone: userForm.value.phone,
-        Role: userForm.value.role,
-        Address: userForm.value.address,
-        IsActive: userForm.value.isActive
+        userName: userForm.value.name,
+        email: userForm.value.email,
+        phone: userForm.value.phone,
+        role: userForm.value.role,
+        address: userForm.value.address,
+        isActive: userForm.value.isActive
       }
       await api.put(`/users/${selectedUser.value.id}`, payload)
       Object.assign(selectedUser.value, {

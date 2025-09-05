@@ -154,6 +154,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import emitter from '@/eventBus'
 import { useProductStore } from '@/stores/product'
 import api from '@/api'
+import { formatDateTime } from '@/utils/date'
 
 const productStore = useProductStore()
 
@@ -181,20 +182,8 @@ const getStatusText = (status) => {
   return statusMap[status] || '未知'
 }
 
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return '未知'
-  try {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('zh-TW') + ' ' + date.toLocaleTimeString('zh-TW', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })
-  } catch (error) {
-    console.error('日期格式化錯誤:', error)
-    return '無效日期'
-  }
-}
+// 使用共用日期工具，會根據使用者本機時區顯示
+const formatDate = formatDateTime
 
 // API 請求函數（使用配置好的 axios 實例）
 const fetchApi = async (endpoint) => {
@@ -231,7 +220,8 @@ const refreshData = async () => {
         .slice(0, 5)
         .map(order => ({
           id: order.id,
-          customerName: order.user?.name || order.user?.username || '未知客戶',
+          // 使用後端標準化欄位 displayName，若不存在再 fallback 到 order.customerName
+          customerName: order.displayName || order.customerName || '未知客戶',
           totalAmount: order.totalAmount || 0,
           status: order.status || 'pending',
           createdAt: order.createdAt

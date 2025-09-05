@@ -48,18 +48,22 @@ export const useAuthStore = defineStore('auth', {
   const response = await api.post(`/auth/login`, credentials)
         
         // 根據後端實際的響應格式處理數據
-        const { data } = response.data
+  const { data } = response.data
         
         // 生成一個簡單的 token（實際項目中應該由後端生成JWT）
         const token = `token_${data.id}_${Date.now()}`
         
         this.token = token
-        this.user = data
+        // normalize user object keys for frontend usage
+        this.user = Object.assign({}, data, {
+          userName: data.userName ?? data.UserName ?? data.username ?? data.Username,
+          displayName: data.displayName ?? data.DisplayName ?? data.name ?? data.userName ?? data.UserName
+        })
         this.isAuthenticated = true
         
         // 保存到 localStorage
         localStorage.setItem('token', token)
-        localStorage.setItem('user', JSON.stringify(data))
+  localStorage.setItem('user', JSON.stringify(this.user))
         
         // 設置 axios 默認 header
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -85,19 +89,19 @@ export const useAuthStore = defineStore('auth', {
       try {
         // payload 轉換，後端需要 userName
         const payload = {
-          UserName: userData.userName ?? userData.username,
-          Password: userData.password,
-          Email: userData.email,
-          Address: userData.address,
-          Phone: userData.phone,
-          IsActive: userData.isActive
+          userName: userData.userName ?? userData.username,
+          password: userData.password,
+          email: userData.email,
+          address: userData.address,
+          phone: userData.phone,
+          isActive: userData.isActive
         }
         const response = await api.post('/auth/register', payload)
 
-        // 註冊成功後自動登入
+        // 註冊成功後自動登入（使用 camelCase 欄位）
         return await this.login({
-          username: payload.UserName,
-          password: payload.Password
+          userName: payload.userName,
+          password: payload.password
         })
       } catch (error) {
         console.error('Register API call failed:', error);

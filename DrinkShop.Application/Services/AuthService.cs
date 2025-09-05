@@ -37,8 +37,11 @@ namespace DrinkShop.Application.Services
             // The repository is now responsible for password validation
             var user = await _authRepository.ValidateUserAsync(dto.UserName, dto.Password);
             if (user == null) return null;
-            
-            // TODO: Implement logic to update LastLoginAt in the repository
+            // 成功登入後更新最後登入時間（以 UTC）
+            var nowUtc = DateTime.UtcNow;
+            await _authRepository.UpdateLastLoginAsync(user.Id, nowUtc);
+            // 將更新後的時間回填到 DTO（避免額外查詢）
+            user.LastLoginAt = nowUtc;
             return user;
         }
     }

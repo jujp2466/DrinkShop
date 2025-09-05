@@ -108,7 +108,7 @@
               </td>
               <td>
                 <div class="customer-info">
-                  <h4>{{ order.customerName }}</h4>
+                  <h4>{{ order.displayName || order.customerName }}</h4>
                   <p>{{ order.customerPhone }}</p>
                   <p>{{ order.customerEmail }}</p>
                 </div>
@@ -172,7 +172,7 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>姓名：</label>
-                <span>{{ selectedOrder.customerName }}</span>
+                <span>{{ selectedOrder.displayName || selectedOrder.customerName }}</span>
               </div>
               <div class="info-item">
                 <label>電話：</label>
@@ -207,7 +207,7 @@
               </div>
               <div class="summary-row">
                 <span>運費：</span>
-                <span>NT$ {{ selectedOrder.shippingFee.toLocaleString() }}</span>
+                <span>{{ selectedOrder.shippingFee === 0 ? '免運' : ('NT$ ' + selectedOrder.shippingFee.toLocaleString()) }}</span>
               </div>
               <div class="summary-row total">
                 <span>總計：</span>
@@ -231,6 +231,7 @@
 import { ref, computed, onMounted } from 'vue'
 import emitter from '@/eventBus'
 import api from '@/api'
+import { formatDateTime } from '@/utils/date'
 
 const loading = ref(false)
 const orders = ref([])
@@ -268,8 +269,8 @@ const filteredOrders = computed(() => {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(order =>
       String(order.id).toLowerCase().includes(query) ||
-      order.customerName.toLowerCase().includes(query) ||
-      order.customerEmail.toLowerCase().includes(query)
+      (order.displayName || order.customerName || '').toLowerCase().includes(query) ||
+      (order.customerEmail || '').toLowerCase().includes(query)
     )
   }
 
@@ -277,6 +278,8 @@ const filteredOrders = computed(() => {
 })
 
 const getPaymentMethodText = (method) => {
+  // 如果沒有提供付款方式，顯示為「未知」
+  if (!method) return '未知'
   const methods = {
     'credit-card': '信用卡',
     'bank-transfer': '銀行轉帳',
@@ -285,14 +288,8 @@ const getPaymentMethodText = (method) => {
   return methods[method] || method
 }
 
-const formatDateTime = (dateString) => {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-TW') + ' ' + date.toLocaleTimeString('zh-TW', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  })
-}
+// 使用共用日期工具，顯示使用者本機時區
+// formatDateTime 已由 utils 提供
 
 
 const mapOrder = (o) => ({
@@ -300,7 +297,8 @@ const mapOrder = (o) => ({
   userId: o.userId ?? o.UserId ?? '',
   user: o.user ?? {},
   // 支援不同命名（UserDto.UserName -> JSON 可能為 userName）
-  customerName: o.user?.name ?? o.user?.userName ?? o.user?.username ?? o.customerName ?? o.CustomerName ?? '未知客戶',
+  // prefer backend-provided displayName, fallback to various fields for compatibility
+  customerName: o.displayName ?? o.user?.userName ?? o.user?.username ?? o.user?.name ?? o.customerName ?? o.CustomerName ?? '未知客戶',
   customerPhone: o.user?.phone ?? o.customerPhone ?? o.CustomerPhone ?? '',
   customerEmail: o.user?.email ?? o.customerEmail ?? o.CustomerEmail ?? '',
   shippingAddress: o.shippingAddress ?? o.ShippingAddress ?? '',
@@ -308,7 +306,8 @@ const mapOrder = (o) => ({
   shippingFee: o.shippingFee ?? o.ShippingFee ?? 0,
   itemCount: (o.items && o.items.length) || o.itemCount || 0,
   status: o.status ?? o.Status ?? 'pending',
-  paymentMethod: o.paymentMethod ?? o.PaymentMethod ?? 'credit-card',
+  // 不在這裡預設為信用卡，若無值在顯示時會呈現「未知」
+  paymentMethod: o.paymentMethod ?? o.PaymentMethod ?? null,
   createdAt: o.createdAt ?? o.CreatedAt,
   items: o.items ?? [],
   notes: o.notes ?? ''

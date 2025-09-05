@@ -32,6 +32,7 @@ namespace DrinkShop.Infrastructure.Repositories
                     User = o.User == null ? null : new UserDto {
                         Id = o.User.Id,
                         UserName = o.User.UserName,
+                        DisplayName = string.IsNullOrWhiteSpace(o.User.UserName) ? (string.IsNullOrWhiteSpace(o.User.Email) ? (o.User.Address ?? "") : o.User.Email) : o.User.UserName,
                         Email = o.User.Email,
                         Role = o.User.Role,
                         Address = o.User.Address,
@@ -41,8 +42,17 @@ namespace DrinkShop.Infrastructure.Repositories
                         LastLoginAt = o.User.LastLoginAt,
                         CreatedAt = o.User.CreatedAt
                     },
+                    // standard display name for front-end
+                    DisplayName = o.User != null
+                        ? (string.IsNullOrWhiteSpace(o.User.UserName)
+                            ? (string.IsNullOrWhiteSpace(o.User.Email) ? (o.User.Address ?? string.Empty) : o.User.Email)
+                            : o.User.UserName)
+                        : string.Empty,
                     TotalAmount = o.TotalAmount, 
+                    ShippingFee = o.ShippingFee,
                     Status = o.Status, 
+                    PaymentMethod = o.PaymentMethod,
+                    // 回傳資料庫原始時間（UTC），前端將依使用者時區顯示
                     CreatedAt = o.CreatedAt,
                     Items = o.Items.Select(i => new OrderItemDto
                     {
@@ -69,6 +79,7 @@ namespace DrinkShop.Infrastructure.Repositories
                     User = o.User == null ? null : new UserDto {
                         Id = o.User.Id,
                         UserName = o.User.UserName,
+                        DisplayName = string.IsNullOrWhiteSpace(o.User.UserName) ? (string.IsNullOrWhiteSpace(o.User.Email) ? (o.User.Address ?? "") : o.User.Email) : o.User.UserName,
                         Email = o.User.Email,
                         Role = o.User.Role,
                         Address = o.User.Address,
@@ -78,8 +89,16 @@ namespace DrinkShop.Infrastructure.Repositories
                         LastLoginAt = o.User.LastLoginAt,
                         CreatedAt = o.User.CreatedAt
                     },
+                    DisplayName = o.User != null
+                        ? (string.IsNullOrWhiteSpace(o.User.UserName)
+                            ? (string.IsNullOrWhiteSpace(o.User.Email) ? (o.User.Address ?? string.Empty) : o.User.Email)
+                            : o.User.UserName)
+                        : string.Empty,
                     TotalAmount = o.TotalAmount,
+                    ShippingFee = o.ShippingFee,
                     Status = o.Status,
+                    PaymentMethod = o.PaymentMethod,
+                    // 回傳資料庫原始時間（UTC），前端將依使用者時區顯示
                     CreatedAt = o.CreatedAt,
                     Items = o.Items.Select(i => new OrderItemDto
                     {
@@ -108,6 +127,7 @@ namespace DrinkShop.Infrastructure.Repositories
                 User = order.User == null ? null : new UserDto {
                     Id = order.User.Id,
                     UserName = order.User.UserName,
+                    DisplayName = string.IsNullOrWhiteSpace(order.User.UserName) ? (string.IsNullOrWhiteSpace(order.User.Email) ? (order.User.Address ?? "") : order.User.Email) : order.User.UserName,
                     Email = order.User.Email,
                     Role = order.User.Role,
                     Address = order.User.Address,
@@ -117,8 +137,16 @@ namespace DrinkShop.Infrastructure.Repositories
                     LastLoginAt = order.User.LastLoginAt,
                     CreatedAt = order.User.CreatedAt
                 },
+                DisplayName = order.User != null
+                    ? (string.IsNullOrWhiteSpace(order.User.UserName)
+                        ? (string.IsNullOrWhiteSpace(order.User.Email) ? (order.User.Address ?? string.Empty) : order.User.Email)
+                        : order.User.UserName)
+                    : string.Empty,
                 TotalAmount = order.TotalAmount, 
+                ShippingFee = order.ShippingFee,
                 Status = order.Status, 
+                PaymentMethod = order.PaymentMethod,
+                // 回傳資料庫原始時間（UTC），前端將依使用者時區顯示
                 CreatedAt = order.CreatedAt,
                 Items = order.Items.Select(i => new OrderItemDto
                 {
@@ -140,7 +168,8 @@ namespace DrinkShop.Infrastructure.Repositories
                 ShippingAddress = createOrderDto.ShippingAddress,
                 PaymentMethod = createOrderDto.PaymentMethod,
                 Notes = createOrderDto.Notes,
-                ShippingFee = createOrderDto.ShippingFee,
+                // 店慶免運：強制後端將運費設為 0，前端送來的值會被覆蓋
+                ShippingFee = 0m,
                 Items = createOrderDto.Items.Select(i => new OrderItem {
                     ProductId = i.ProductId,
                     Quantity = i.Quantity,

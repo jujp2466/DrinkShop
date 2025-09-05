@@ -37,20 +37,21 @@
               </div>
 
               <!-- 總計 -->
-              <div class="order-total">
-                <div class="total-row">
-                  <span>小計：</span>
-                  <span>NT$ {{ cartStore.totalAmount.toFixed(2) }}</span>
-                </div>
-                <div class="total-row">
-                  <span>運費：</span>
-                  <span>NT$ {{ shippingFee.toFixed(2) }}</span>
-                </div>
-                <div class="total-row grand-total">
-                  <span>總計：</span>
-                  <span>NT$ {{ (cartStore.totalAmount + shippingFee).toFixed(2) }}</span>
-                </div>
-              </div>
+                          <div class="order-total">
+                            <div class="total-row">
+                              <span>小計：</span>
+                              <span>NT$ {{ cartStore.totalAmount.toFixed(2) }}</span>
+                            </div>
+                            <div class="total-row">
+                              <span>運費：</span>
+                              <span v-if="shippingFee === 0">免運</span>
+                              <span v-else>NT$ {{ shippingFee.toFixed(2) }}</span>
+                            </div>
+                            <div class="total-row grand-total">
+                              <span>總計：</span>
+                              <span>NT$ {{ (cartStore.totalAmount + shippingFee).toFixed(2) }}</span>
+                            </div>
+                          </div>
             </div>
           </div>
 
@@ -215,11 +216,13 @@ const cartStore = useCartStore()
 const authStore = useAuthStore()
 
 const isSubmitting = ref(false)
-const shippingFee = ref(60) // 固定運費
+// 店慶免運：暫時將運費設為 0
+const shippingFee = ref(0)
 
 // 訂單表單
 const orderForm = reactive({
-  customerName: authStore.currentUser?.username || '',
+  // prefer backend camelCase userName or displayName
+  customerName: authStore.currentUser?.userName || authStore.currentUser?.displayName || '',
   customerPhone: '',
   customerEmail: authStore.currentUser?.email || '',
   shippingAddress: '',
@@ -233,16 +236,17 @@ const submitOrder = async () => {
   
   try {
     // 如果用戶已登入，先更新用戶資訊
-    if (authStore.currentUser?.Id) {
+    if (authStore.currentUser?.id || authStore.currentUser?.Id) {
+      const userId = authStore.currentUser?.id ?? authStore.currentUser?.Id
       const userUpdateData = {
-        name: orderForm.customerName,
+        userName: orderForm.customerName,
         phone: orderForm.customerPhone,
         email: orderForm.customerEmail,
         address: orderForm.shippingAddress
       }
       
       try {
-        await api.put(`/users/${authStore.currentUser.Id}`, userUpdateData)
+        await api.put(`/users/${userId}`, userUpdateData)
       } catch (userUpdateError) {
         console.warn('更新用戶資訊失敗：', userUpdateError)
         // 繼續提交訂單，不因為用戶資訊更新失敗而中斷
