@@ -187,10 +187,35 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            // 檔案型資料庫正常進行遷移
+            // 檔案型資料庫正常進行遷移，失敗時在生產環境嘗試 EnsureCreated 作為保底
             Console.WriteLine("Running migrations on file-based database...");
-            db.Database.Migrate();
-            Console.WriteLine("Database migrations completed");
+            try
+            {
+                db.Database.Migrate();
+                Console.WriteLine("Database migrations completed");
+            }
+            catch (Exception migEx)
+            {
+                Console.WriteLine($"Migration failed: {migEx.Message}");
+                if (isProduction)
+                {
+                    try
+                    {
+                        Console.WriteLine("PRODUCTION: Falling back to EnsureCreated()...");
+                        db.Database.EnsureCreated();
+                        Console.WriteLine("EnsureCreated completed (tables created without migrations history)");
+                    }
+                    catch (Exception ensureEx)
+                    {
+                        Console.WriteLine($"EnsureCreated failed: {ensureEx.Message}");
+                        throw; // 無法建立資料表時仍讓啟動失敗，避免服務啟動但之後 500
+                    }
+                }
+                else
+                {
+                    throw; // 開發環境直接失敗
+                }
+            }
         }
         
         // 確保有 admin 用戶
