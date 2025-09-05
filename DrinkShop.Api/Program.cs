@@ -35,14 +35,37 @@ Console.WriteLine($"IsProduction: {isProduction}, IsDevelopment: {isDevelopment}
 string contentRoot = builder.Environment.ContentRootPath;
 Console.WriteLine($"ContentRootPath: {contentRoot}");
 
-// 在 Azure 上使用特殊路徑，這是一個可寫的路徑
+// Production 環境：優先使用 DB_PATH；否則使用 Azure App Service 的 HOME 持久路徑
+// Development 環境：使用專案內 /data 目錄
 string dbPath;
-if (isProduction)
+var dbPathFromEnv = Environment.GetEnvironmentVariable("DB_PATH");
+var homeEnv = Environment.GetEnvironmentVariable("HOME");
+Console.WriteLine($"Env HOME={homeEnv}, DB_PATH={dbPathFromEnv}");
+
+if (!string.IsNullOrWhiteSpace(dbPathFromEnv))
 {
-    // 在 Azure App Service 上使用 TEMP 目錄，這是可寫的
-    var tempDir = Environment.GetEnvironmentVariable("TEMP") ?? Path.Combine(contentRoot, "App_Data");
-    dbPath = Path.Combine(tempDir, "drinkshop.db");
-    Console.WriteLine($"PRODUCTION: Using Azure App Service TEMP directory for database: {dbPath}");
+    dbPath = dbPathFromEnv!;
+    Console.WriteLine($"Using DB_PATH from environment: {dbPath}");
+}
+else if (isProduction)
+{
+    // Azure App Service（Windows/Linux）建議使用 HOME 路徑作為持久層
+    // Windows:  D:\home\data\drinkshop.db
+    // Linux:    /home/data/drinkshop.db 或 /home/site/data/drinkshop.db
+    if (!string.IsNullOrWhiteSpace(homeEnv))
+    {
+        // 優先使用 HOME\data；若之後你偏好 site\data，可改為 Path.Combine(homeEnv, "site", "data")
+        var dataDir = Path.Combine(homeEnv!, "data");
+        dbPath = Path.Combine(dataDir, "drinkshop.db");
+        Console.WriteLine($"PRODUCTION: Using HOME-based persistent path for database: {dbPath}");
+    }
+    else
+    {
+        // HOME 不存在時的保底（仍為可寫，但可能不持久），盡量避免走到這裡
+        var appData = Path.Combine(contentRoot, "App_Data");
+        dbPath = Path.Combine(appData, "drinkshop.db");
+        Console.WriteLine($"PRODUCTION: HOME not found. Falling back to App_Data (non-persistent): {dbPath}");
+    }
 }
 else
 {
