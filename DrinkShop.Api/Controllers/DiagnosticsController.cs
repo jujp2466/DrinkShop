@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DrinkShop.Infrastructure;
 using DrinkShop.Domain.Entities;
+using Microsoft.Data.Sqlite;
 
 namespace DrinkShop.Api.Controllers
 {
@@ -60,6 +61,10 @@ namespace DrinkShop.Api.Controllers
                 {
                     Directory.CreateDirectory(directory);
                 }
+
+                // 釋放資料庫連線，以便刪除檔案
+                await _context.Database.CloseConnectionAsync();
+                SqliteConnection.ClearAllPools();
 
                 // 刪除現有資料庫檔案
                 if (System.IO.File.Exists(dbPath))
