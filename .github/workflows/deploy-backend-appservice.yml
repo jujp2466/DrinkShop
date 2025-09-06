@@ -19,47 +19,38 @@ jobs:
       PUBLISH_DIR: ${{ github.workspace }}\publish
 
     steps:
-      # 1️⃣ 取得原始碼
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ 安裝 .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      # 3️⃣ 還原 NuGet 套件
       - name: Restore
         run: dotnet restore $env:PROJECT_PATH
 
-      # 4️⃣ 編譯專案
       - name: Build
         run: dotnet build $env:PROJECT_PATH --configuration Release --no-restore
 
-      # 5️⃣ 發佈專案
       - name: Publish
         run: dotnet publish $env:PROJECT_PATH --configuration Release --no-build --output $env:PUBLISH_DIR
 
-      # 6️⃣ 確認發佈結果
       - name: Check publish output
         run: dir ${{ env.PUBLISH_DIR }}
 
-      # 7️⃣ 登入 Azure（使用 Service Principal）
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 8️⃣ 部署到 Azure Web App (Zip Deploy)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: drinkshop-c5ccheftavfvh0av # <-- 請確認名稱
+          app-name: DrinkShop
+          resource-group-name: DrinkShop
           package: ${{ env.PUBLISH_DIR }}
-          deployment-method: zipDeploy
 
-      # 9️⃣ Swagger 熱身
       - name: Post-deploy warmup
         shell: pwsh
         run: |
