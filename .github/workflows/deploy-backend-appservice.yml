@@ -41,12 +41,9 @@ jobs:
       - name: Publish
         run: dotnet publish $env:PROJECT_PATH --configuration Release --no-build --output $env:PUBLISH_DIR
 
-      # 6️⃣ 上傳 artifact（可選）
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dotnet-app
-          path: ${{ env.PUBLISH_DIR }}
+      # 6️⃣ 確認發佈結果
+      - name: Check publish output
+        run: dir ${{ env.PUBLISH_DIR }}
 
       # 7️⃣ 登入 Azure（使用 Service Principal）
       - name: Azure Login
@@ -54,14 +51,15 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 8️⃣ 部署到 Azure Web App
+      # 8️⃣ 部署到 Azure Web App (Zip Deploy)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: DrinkShop
+          app-name: drinkshop-c5ccheftavfvh0av # <-- 請確認名稱
           package: ${{ env.PUBLISH_DIR }}
+          deployment-method: zipDeploy
 
-      # 9️⃣ Swagger 熱身（可選）
+      # 9️⃣ Swagger 熱身
       - name: Post-deploy warmup
         shell: pwsh
         run: |
