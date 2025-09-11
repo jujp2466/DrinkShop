@@ -10,6 +10,9 @@
 
 - **主要技術棧**:
   - **框架**: Vue 3 (使用 `<script setup>` 的 Composition API)
+    
+*   **依賴注入 (DI)**: 在後端使用 ASP.NET Core 的 DI 容器（例如 `builder.Services.AddScoped`）註冊服務，可在面試中說明如何以 interface 注入不同實作；前端則以 Pinia 與組件抽象化來達成類似的模組化設計。
+
   - **建置工具**: Vite (提供極速的開發伺服器和打包體驗)
   - **狀態管理**: Pinia (Vue 官方推薦的下一代狀態管理庫)
   - **路由**: Vue Router (官方 SPA 路由管理器)
@@ -24,10 +27,12 @@
 
 - `main.js`: **程式進入點**。初始化 Vue 應用，並掛載 Pinia 和 Vue Router。
 - `App.vue`: **根組件**。包含 `<router-view>`，所有頁面都會在這裡被渲染。
-- `api.js`: **API 請求中心**。集中管理 Axios 實例，統一設定 baseURL 和攔截器 (interceptor)，例如在登入後自動加上 JWT `Authorization` 標頭。
+    - `api.js`: **API 請求中心**。集中管理 Axios 實例，統一設定 baseURL 和攔截器 (interceptor)。注意：本專案範例中前端會生成並使用「模擬 token」，`api.js` 會在登入後自動將該模擬 token 加入 `Authorization` 標頭以示範流程。後端目前未簽發 JWT。
+
+    後端以 RESTful API 風格提供服務，前端透過 `api.js` 呼叫語意化路由並使用標準 HTTP 方法 (GET/POST/PUT/DELETE) 與後端通訊。
 - `router/index.js`: **路由設定檔**。定義所有頁面路徑與其對應的組件。
 - `stores/`: **Pinia 狀態管理中心**。這是前端的核心數據層。
-  - `auth.js`: 管理使用者登入狀態、JWT token 和用戶資訊。
+    - `auth.js`: 管理使用者登入狀態、示範用的 token（模擬 token）和用戶資訊。後端範例實作未簽發 JWT。
   - `cart.js`: 管理購物車的商品、數量和總金額。
   - `product.js`: 管理商品列表的數據和篩選狀態。
 - `views/`: **頁面級組件**。每個檔案對應一個路由，例如 `HomePage.vue`, `ProductsPage.vue`。

@@ -12,7 +12,9 @@
   - **框架**: ASP.NET Core 9
   - **資料庫**: Entity Framework Core 9 + SQLite (易於開發和部署)
   - **架構**: Clean Architecture
-  - **驗證**: JWT (JSON Web Tokens)
+  - **驗證 (說明)**: 專案範例中後端未簽發 JWT；若需使用真實 JWT，請在後端加入簽發邏輯與 JwtBearer 驗證設定。
+
+後端以 RESTful API 風格提供服務，使用語意化路由與標準 HTTP 方法 (GET/POST/PUT/DELETE) 作為通訊協定。
 
 ---
 
@@ -23,6 +25,8 @@
 **核心理念**: 依賴關係由外向內，確保核心業務邏輯 (Domain) 的獨立性。
 
 ![Clean Architecture Diagram](https://i.imgur.com/9Nab4u3.png)
+
++*   **依賴注入 (DI)**: 使用 ASP.NET Core 的 DI 容器（例如 `builder.Services.AddScoped`）註冊服務，提升模組化、可測試性與替換性，便於在面試中說明如何以 interface 注入不同實作。
 
 專案結構對應如下：
 
@@ -91,9 +95,9 @@
 - **展示 Clean Architecture**: 解釋各專案 (Domain, Application, Infrastructure, Api) 的職責和依賴方向，這會讓面試官覺得你具備大型專案的架構能力。
 - **解釋依賴注入**: 打開 `Program.cs`，說明如何註冊服務 (`builder.Services.AddScoped<IProductService, ProductService>()`)，並在 `ProductsController.cs` 中展示如何透過建構子注入使用。
 - **追蹤一個 API**: 實際操作一次，從 Controller -> Service -> Repository -> DB，解釋 DTO 和 Entity 的轉換，以及各層的職責。
-- **身分驗證 (JWT)**:
-    - 說明登入 API (`AuthController`) 如何驗證使用者並產生 JWT。
-    - 展示某個需要授權的 API (例如 `[Authorize]`)，並解釋請求 Header 中的 `Bearer Token` 是如何被驗證的。
+**身分驗證 (目前實作說明)**:
+
+- 本專案的 `AuthController` 會驗證使用者並回傳使用者 DTO，但目前**未產生或簽發 JWT**。文件中若提及簽發 JWT，請改為註明「後端未簽發 JWT；前端使用模擬 token」或改為實作後端簽發流程。若要將專案改為使用真實 JWT，應在 `AuthService`/`AuthController` 中簽發 token，並在 `Program.cs` 設定 `AddAuthentication().AddJwtBearer(...)`。
 - **資料庫與 EF Core**:
     - 打開 `DrinkShopDbContext.cs`，展示如何定義 `DbSet`。
     - 說明 `Migrations` 資料夾的作用，表示您了解資料庫版本控制。

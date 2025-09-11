@@ -392,3 +392,9 @@ coverage/
 
 # Reference tutorial folder
 reference-cursor-tutor/
+
+# Ignore project-facing markdown notes used for interviews/docs
+# These are local project docs that shouldn't be committed by default
+PROJECT_*.md
+PROJECT_OVERVIEW.md
+**/PROJECT_OVERVIEW.md
