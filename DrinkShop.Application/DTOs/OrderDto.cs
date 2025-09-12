@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace DrinkShop.Application.DTOs
 {
     public class OrderDto

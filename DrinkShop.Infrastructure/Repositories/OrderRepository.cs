@@ -2,9 +2,6 @@ using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
 using DrinkShop.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace DrinkShop.Infrastructure.Repositories
 {

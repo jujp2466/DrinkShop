@@ -1,5 +1,4 @@
 using DrinkShop.Application.DTOs;
-using System.Threading.Tasks;
 
 namespace DrinkShop.Application.Interfaces
 {

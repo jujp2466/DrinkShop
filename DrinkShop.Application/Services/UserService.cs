@@ -1,7 +1,5 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace DrinkShop.Application.Services
 {
