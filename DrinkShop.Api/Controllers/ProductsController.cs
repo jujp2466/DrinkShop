@@ -1,9 +1,11 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DrinkShop.Api.Controllers
 {
+    // [Authorize] // 公開查詢商品，不需登入
     [ApiController]
     [Route("api/v1/[controller]")]
     public class ProductsController : ControllerBase
@@ -42,7 +44,8 @@ namespace DrinkShop.Api.Controllers
         /// 新增商品
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProductDto input)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create([FromBody] ProductDto input)
         {
             var product = await _service.CreateAsync(input);
             return Ok(new { code = 200, message = "Created", data = product });
@@ -53,7 +56,8 @@ namespace DrinkShop.Api.Controllers
         /// 更新商品
         /// </summary>
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ProductDto input)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(int id, [FromBody] ProductDto input)
         {
             var product = await _service.UpdateAsync(id, input);
             if (product == null) return NotFound(new { code = 404, message = "Not Found" });
@@ -65,7 +69,8 @@ namespace DrinkShop.Api.Controllers
         /// 刪除商品
         /// </summary>
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
         {
             var success = await _service.DeleteAsync(id);
             if (!success) return NotFound(new { code = 404, message = "Not Found" });

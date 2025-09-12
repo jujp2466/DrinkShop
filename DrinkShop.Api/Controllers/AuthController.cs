@@ -33,20 +33,13 @@ namespace DrinkShop.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var user = await _service.LoginAsync(dto);
-            if (user == null) return Unauthorized(new { code = 401, message = "用戶名或密碼錯誤" });
+            var token = await _service.LoginAsync(dto);
+            if (token == null) return Unauthorized(new { code = 401, message = "用戶名或密碼錯誤" });
             return Ok(new {
                 code = 200,
                 message = "Success",
                 data = new {
-                    user.Id,
-                    user.UserName,
-                    user.Role,
-                    user.Address,
-                    user.Phone,
-                    user.IsActive,
-                    user.Status,
-                    user.LastLoginAt
+                    token
                 }
             });
         }

@@ -10,8 +10,8 @@ namespace DrinkShop.Application.Interfaces
     /// </summary>
     Task<UserDto?> RegisterAsync(RegisterDto dto);
     /// <summary>
-    /// 使用者登入
+    /// 使用者登入，成功時回傳 JWT
     /// </summary>
-    Task<UserDto?> LoginAsync(LoginDto dto);
+    Task<string?> LoginAsync(LoginDto dto);
     }
 }

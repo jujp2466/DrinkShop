@@ -1,5 +1,10 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace DrinkShop.Application.Services
@@ -7,9 +12,12 @@ namespace DrinkShop.Application.Services
     public class AuthService : IAuthService
     {
         private readonly IAuthRepository _authRepository;
-        public AuthService(IAuthRepository authRepository)
+        private readonly IConfiguration _configuration;
+
+        public AuthService(IAuthRepository authRepository, IConfiguration configuration)
         {
             _authRepository = authRepository;
+            _configuration = configuration;
         }
 
     /// <summary>
@@ -32,17 +40,40 @@ namespace DrinkShop.Application.Services
     /// <summary>
     /// 使用者登入
     /// </summary>
-        public async Task<UserDto?> LoginAsync(LoginDto dto)
+        public async Task<string?> LoginAsync(LoginDto dto)
         {
-            // The repository is now responsible for password validation
             var user = await _authRepository.ValidateUserAsync(dto.UserName, dto.Password);
             if (user == null) return null;
-            // 成功登入後更新最後登入時間（以 UTC）
+
             var nowUtc = DateTime.UtcNow;
             await _authRepository.UpdateLastLoginAsync(user.Id, nowUtc);
-            // 將更新後的時間回填到 DTO（避免額外查詢）
-            user.LastLoginAt = nowUtc;
-            return user;
+
+            return GenerateJwtToken(user);
+        }
+
+        private string GenerateJwtToken(UserDto user)
+        {
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Name, user.UserName),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var expires = DateTime.UtcNow.AddDays(Convert.ToDouble(_configuration["Jwt:ExpireDays"] ?? "7"));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: expires,
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

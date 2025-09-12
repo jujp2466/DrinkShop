@@ -1,9 +1,11 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DrinkShop.Api.Controllers
 {
+    [Authorize(Roles = "admin")]
     [ApiController]
     [Route("api/v1/[controller]")]
     public class UsersController : ControllerBase
@@ -22,9 +24,12 @@ namespace DrinkShop.Api.Controllers
         public async Task<IActionResult> GetAll([FromQuery] string? role = null)
         {
             var result = await _service.GetAllAsync();
-            
-            // 如果指定了 role 參數，可以在這裡處理篩選邏輯
-            // 目前為了簡化，忽略 role 參數，直接返回所有用戶
+
+            // 如果指定了 role 參數，則依角色篩選
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                result = result.Where(u => u.Role?.Equals(role, StringComparison.OrdinalIgnoreCase) == true).ToList();
+            }
             return Ok(new { code = 200, message = "Success", data = result });
         }
         /// <summary>

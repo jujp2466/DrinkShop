@@ -4,6 +4,11 @@ using DrinkShop.Infrastructure;
 using DrinkShop.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,11 +17,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "https://blue-island-07506ba00.1.azurestaticapps.net",
-                "http://localhost:5173",
-                "http://localhost:5174"
-            )
+    policy.WithOrigins(
+        "https://blue-island-07506ba00.1.azurestaticapps.net",
+        "http://localhost:5173"
+        )
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -66,6 +70,27 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        RoleClaimType = ClaimTypes.Role
+    };
+});
+
 // 配置 DbContext
 var connectionString = new SqliteConnectionStringBuilder
 {
@@ -83,13 +108,44 @@ builder.Services.AddDbContext<DrinkShopDbContext>(options =>
 }, ServiceLifetime.Scoped);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DrinkShop API", Version = "v1" });
+
+    // Define the BearerAuth security scheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "請直接輸入 JWT token，不需加 Bearer 前綴",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
 app.UseRouting();
 app.UseCors("AllowFrontend");
+
+app.UseAuthentication(); // <-- 啟用驗證
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())

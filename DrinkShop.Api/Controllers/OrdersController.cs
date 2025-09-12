@@ -1,9 +1,11 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DrinkShop.Api.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/v1/[controller]")]
     public class OrdersController : ControllerBase
@@ -41,7 +43,8 @@ namespace DrinkShop.Api.Controllers
         /// 更新訂單狀態
         /// </summary>
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] OrderDto updated)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] OrderDto updated)
         {
             var order = await _service.UpdateStatusAsync(id, updated.Status);
             if (order == null) return NotFound(new { code = 404, message = "Order not found" });
@@ -53,7 +56,8 @@ namespace DrinkShop.Api.Controllers
         /// 刪除訂單
         /// </summary>
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
         {
             var success = await _service.DeleteAsync(id);
             if (!success) return NotFound(new { code = 404, message = "Order not found" });

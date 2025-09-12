@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DrinkShop.Infrastructure;
@@ -24,16 +25,16 @@ namespace DrinkShop.Api.Controllers
         {
             var envVars = new Dictionary<string, string>
             {
-                ["ASPNETCORE_ENVIRONMENT"] = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-                ["HOME"] = Environment.GetEnvironmentVariable("HOME"),
-                ["DB_PATH"] = Environment.GetEnvironmentVariable("DB_PATH"),
-                ["TEMP"] = Environment.GetEnvironmentVariable("TEMP"),
-                ["WEBSITE_SITE_NAME"] = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")
+                ["ASPNETCORE_ENVIRONMENT"] = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "",
+                ["HOME"] = Environment.GetEnvironmentVariable("HOME") ?? "",
+                ["DB_PATH"] = Environment.GetEnvironmentVariable("DB_PATH") ?? "",
+                ["TEMP"] = Environment.GetEnvironmentVariable("TEMP") ?? "",
+                ["WEBSITE_SITE_NAME"] = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") ?? ""
             };
 
-            var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? 
+            var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ??
                         Path.Combine(Environment.GetEnvironmentVariable("HOME") ?? "", "data", "drinkshop.db");
-            
+
             return new
             {
                 timestamp = DateTime.UtcNow,
@@ -52,9 +53,9 @@ namespace DrinkShop.Api.Controllers
         {
             try
             {
-                var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? 
+                var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ??
                             Path.Combine(Environment.GetEnvironmentVariable("HOME") ?? "", "data", "drinkshop.db");
-                
+
                 // 確保目錄存在
                 var directory = Path.GetDirectoryName(dbPath);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -74,7 +75,7 @@ namespace DrinkShop.Api.Controllers
 
                 // 重建資料庫結構
                 await _context.Database.EnsureCreatedAsync();
-                
+
                 // 執行種子資料
                 await SeedDatabaseAsync();
 
@@ -152,7 +153,7 @@ namespace DrinkShop.Api.Controllers
                             IsActive = true
                         }
                     };
-                    
+
                     _context.Products.AddRange(products);
                     await _context.SaveChangesAsync();
                 }
