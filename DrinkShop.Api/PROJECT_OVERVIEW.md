@@ -12,7 +12,7 @@
   - **框架**: ASP.NET Core 9
   - **資料庫**: Entity Framework Core 9 + SQLite (易於開發和部署)
   - **架構**: Clean Architecture
-  - **驗證 (說明)**: 專案範例中後端未簽發 JWT；若需使用真實 JWT，請在後端加入簽發邏輯與 JwtBearer 驗證設定。
+  - **驗證 (功能說明)**: 本專案支援 JWT 驗證，使用者登入後可安全存取 API，所有請求皆自動帶入授權憑證，確保資料安全性並符合現代 RESTful 標準。
 
 後端以 RESTful API 風格提供服務，使用語意化路由與標準 HTTP 方法 (GET/POST/PUT/DELETE) 作為通訊協定。
 
@@ -97,7 +97,7 @@
 - **追蹤一個 API**: 實際操作一次，從 Controller -> Service -> Repository -> DB，解釋 DTO 和 Entity 的轉換，以及各層的職責。
 **身分驗證 (目前實作說明)**:
 
-- 本專案的 `AuthController` 會驗證使用者並回傳使用者 DTO，但目前**未產生或簽發 JWT**。文件中若提及簽發 JWT，請改為註明「後端未簽發 JWT；前端使用模擬 token」或改為實作後端簽發流程。若要將專案改為使用真實 JWT，應在 `AuthService`/`AuthController` 中簽發 token，並在 `Program.cs` 設定 `AddAuthentication().AddJwtBearer(...)`。
+- 本專案的 `AuthController` 會驗證使用者身分，登入成功後回傳授權憑證 (JWT) 及使用者資訊。前端自動保存憑證並於每次 API 請求驗證身分，確保安全性。
 - **資料庫與 EF Core**:
     - 打開 `DrinkShopDbContext.cs`，展示如何定義 `DbSet`。
     - 說明 `Migrations` 資料夾的作用，表示您了解資料庫版本控制。

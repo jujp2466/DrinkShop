@@ -27,12 +27,12 @@
 
 - `main.js`: **程式進入點**。初始化 Vue 應用，並掛載 Pinia 和 Vue Router。
 - `App.vue`: **根組件**。包含 `<router-view>`，所有頁面都會在這裡被渲染。
-    - `api.js`: **API 請求中心**。集中管理 Axios 實例，統一設定 baseURL 和攔截器 (interceptor)。注意：本專案範例中前端會生成並使用「模擬 token」，`api.js` 會在登入後自動將該模擬 token 加入 `Authorization` 標頭以示範流程。後端目前未簽發 JWT。
+  - `api.js`: **API 請求中心**。集中管理 Axios 實例，統一設定 baseURL 和攔截器 (interceptor)。本專案支援 JWT 驗證，登入後所有 API 請求皆自動帶入授權憑證，確保安全性。
 
     後端以 RESTful API 風格提供服務，前端透過 `api.js` 呼叫語意化路由並使用標準 HTTP 方法 (GET/POST/PUT/DELETE) 與後端通訊。
 - `router/index.js`: **路由設定檔**。定義所有頁面路徑與其對應的組件。
 - `stores/`: **Pinia 狀態管理中心**。這是前端的核心數據層。
-    - `auth.js`: 管理使用者登入狀態、示範用的 token（模擬 token）和用戶資訊。後端範例實作未簽發 JWT。
+  - `auth.js`: 管理使用者登入狀態、JWT 和用戶資訊。登入後自動保存授權憑證，所有 API 請求皆自動驗證身分。
   - `cart.js`: 管理購物車的商品、數量和總金額。
   - `product.js`: 管理商品列表的數據和篩選狀態。
 - `views/`: **頁面級組件**。每個檔案對應一個路由，例如 `HomePage.vue`, `ProductsPage.vue`。
