@@ -74,5 +74,16 @@ namespace DrinkShop.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        public async Task<bool> UserNameExistsAsync(string userName)
+        {
+            var user = await _authRepository.GetUserByAccountAsync(userName);
+            return user != null;
+        }
+
+        public async Task<bool> EmailExistsAsync(string email)
+        {
+            var user = await _authRepository.GetUserByEmailAsync(email);
+            return user != null;
+        }
     }
 }

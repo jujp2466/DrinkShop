@@ -87,6 +87,29 @@ namespace DrinkShop.Infrastructure.Repositories
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<UserDto?> GetUserByEmailAsync(string email)
+        {
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null) return null;
+
+            return new UserDto
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                Role = user.Role,
+                Phone = user.Phone,
+                IsActive = user.IsActive,
+                Address = user.Address,
+                Status = user.Status,
+                LastLoginAt = user.LastLoginAt.HasValue ? DateTime.SpecifyKind(user.LastLoginAt.Value, DateTimeKind.Utc) : (DateTime?)null,
+                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc)
+            };
+        }
     }
 }
 

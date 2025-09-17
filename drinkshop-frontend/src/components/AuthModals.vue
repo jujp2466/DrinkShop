@@ -74,7 +74,12 @@
             required
             class="form-input"
             placeholder="請輸入用戶名"
+                    @blur="debouncedCheckUserName"
+                    @input="debouncedCheckUserName"
           >
+                  <div v-if="userNameStatus === 'checking'" style="color:#888;font-size:0.9em;">檢查中...</div>
+                  <div v-if="userNameStatus === 'exists'" style="color:#dc2626;font-size:0.9em;">此用戶名已被註冊</div>
+                  <div v-if="userNameStatus === 'ok'" style="color:#16a34a;font-size:0.9em;">可使用</div>
         </div>
         
         <div class="form-group">
@@ -83,10 +88,15 @@
             id="registerEmail"
             v-model="registerForm.email"
             type="email"
-
+            required
             class="form-input"
             placeholder="請輸入電子郵件"
+                    @blur="debouncedCheckEmail"
+                    @input="debouncedCheckEmail"
           >
+                  <div v-if="emailStatus === 'checking'" style="color:#888;font-size:0.9em;">檢查中...</div>
+                  <div v-if="emailStatus === 'exists'" style="color:#dc2626;font-size:0.9em;">此 Email 已被註冊</div>
+                  <div v-if="emailStatus === 'ok'" style="color:#16a34a;font-size:0.9em;">可使用</div>
         </div>
         
 
@@ -112,6 +122,10 @@
             class="form-input"
             placeholder="請再次輸入密碼"
           >
+          <div v-if="registerForm.password || registerForm.confirmPassword" style="margin-top:6px; font-size:0.9em;">
+            <div v-if="!passwordsMatch" style="color:#dc2626;">密碼不一致</div>
+            <div v-else style="color:#16a34a;">密碼一致</div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -145,7 +159,7 @@
         </div>
         
         <div class="modal-footer">
-          <button type="submit" :disabled="authStore.loading" class="btn-primary">
+          <button type="submit" :disabled="authStore.loading || !passwordsMatch" class="btn-primary">
             {{ authStore.loading ? '註冊中...' : '註冊' }}
           </button>
           <button type="button" @click="switchToLogin" class="btn-link">
@@ -158,9 +172,17 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+// 檢查帳號/Email 是否存在（工具型函式，放在 script 最下方）
+async function checkUnique({ userName, email }) {
+  const params = {};
+  if (userName) params.userName = userName;
+  if (email) params.email = email;
+  const res = await $api.get('/auth/check-unique', { params });
+  return res.data;
+}
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -182,6 +204,48 @@ const registerForm = reactive({
   address: '',
   isActive: true
 })
+
+// 唯一性檢查狀態
+const userNameStatus = ref(''); // '', 'checking', 'exists', 'ok'
+const emailStatus = ref('');
+
+let userNameTimer = null;
+let emailTimer = null;
+
+import api from '@/api'
+const $api = api;
+const debouncedCheckUserName = () => {
+  if (userNameTimer) clearTimeout(userNameTimer);
+  userNameStatus.value = registerForm.username ? 'checking' : '';
+  if (!registerForm.username) return;
+  userNameTimer = setTimeout(async () => {
+    try {
+      const res = await checkUnique({ userName: registerForm.username });
+      userNameStatus.value = res.exists ? 'exists' : 'ok';
+    } catch {
+      userNameStatus.value = '';
+    }
+  }, 400);
+};
+
+const debouncedCheckEmail = () => {
+  if (emailTimer) clearTimeout(emailTimer);
+  emailStatus.value = registerForm.email ? 'checking' : '';
+  if (!registerForm.email) return;
+  emailTimer = setTimeout(async () => {
+    try {
+      const res = await checkUnique({ email: registerForm.email });
+      emailStatus.value = res.exists ? 'exists' : 'ok';
+    } catch {
+      emailStatus.value = '';
+    }
+  }, 400);
+};
+
+// 新增一個計算屬性來檢查密碼是否一致
+const passwordsMatch = computed(() => {
+  return registerForm.password === registerForm.confirmPassword;
+});
 
 // 公開的方法，供父組件調用
 const openLogin = () => {
@@ -214,6 +278,8 @@ const switchToLogin = () => {
   authStore.clearError()
 }
 
+const isValidEmail = (val) => /.+@.+\..+/.test(String(val || '').trim())
+
 const handleLogin = async () => {
   const result = await authStore.login(loginForm)
   if (result.success) {
@@ -233,7 +299,27 @@ const handleLogin = async () => {
 }
 
 const handleRegister = async () => {
-  // 準備 payload
+  // 簡單前端驗證：email 必填且格式基本正確
+  if (!registerForm.email || !isValidEmail(registerForm.email)) {
+    authStore.error = '請輸入有效的電子郵件'
+    return
+  }
+  // 確認密碼需與密碼相同
+  if (!registerForm.password || registerForm.password !== registerForm.confirmPassword) {
+    authStore.error = '兩次輸入的密碼不相同'
+    return
+  }
+
+  // 唯一性檢查
+  if (userNameStatus.value === 'exists') {
+    authStore.error = '用戶名已被註冊';
+    return;
+  }
+  if (emailStatus.value === 'exists') {
+    authStore.error = 'Email 已被註冊';
+    return;
+  }
+
   const payload = {
     userName: registerForm.username,
     email: registerForm.email,

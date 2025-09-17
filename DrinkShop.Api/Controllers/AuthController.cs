@@ -1,6 +1,7 @@
 using DrinkShop.Application.DTOs;
 using DrinkShop.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace DrinkShop.Api.Controllers
 {
@@ -14,18 +15,40 @@ namespace DrinkShop.Api.Controllers
             _service = service;
         }
 
+        /// <summary>
+        /// 檢查帳號或信箱是否已存在
+        /// </summary>
+        [HttpGet("check-unique")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> CheckUnique([FromQuery] string? userName, [FromQuery] string? email)
+        {
+            if (string.IsNullOrWhiteSpace(userName) && string.IsNullOrWhiteSpace(email))
+                return BadRequest(new { code = 400, message = "請提供 userName 或 email" });
 
-            /// <summary>
-            /// 使用者註冊
-            /// </summary>
-            [HttpPost("register")]
-            public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+            // 只要有一個存在就回傳 exists=true
+            bool exists = false;
+            if (!string.IsNullOrWhiteSpace(userName))
             {
-                var user = await _service.RegisterAsync(dto);
-                if (user == null)
-                    return BadRequest(new { code = 400, message = "用戶名或郵箱已存在" });
-                return Ok(new { code = 200, message = "Registered", data = new { user.Id, user.UserName, user.Role, user.Address, user.Phone, user.IsActive, user.Status } });
+                exists = await _service.UserNameExistsAsync(userName);
             }
+            if (!exists && !string.IsNullOrWhiteSpace(email))
+            {
+                exists = await _service.EmailExistsAsync(email);
+            }
+            return Ok(new { code = 200, exists });
+        }
+
+        /// <summary>
+        /// 使用者註冊
+        /// </summary>
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            var user = await _service.RegisterAsync(dto);
+            if (user == null)
+                return BadRequest(new { code = 400, message = "用戶名或郵箱已存在" });
+            return Ok(new { code = 200, message = "Registered", data = new { user.Id, user.UserName, user.Role, user.Address, user.Phone, user.IsActive, user.Status } });
+        }
 
         /// <summary>
         /// 使用者登入

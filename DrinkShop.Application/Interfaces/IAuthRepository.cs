@@ -7,7 +7,8 @@ namespace DrinkShop.Application.Interfaces
     /// </summary>
     public interface IAuthRepository
     {
-        Task<UserDto?> GetUserByAccountAsync(string account);
+    Task<UserDto?> GetUserByAccountAsync(string account);
+    Task<UserDto?> GetUserByEmailAsync(string email);
         Task<bool> RegisterUserAsync(RegisterDto registerDto);
         Task<UserDto?> ValidateUserAsync(string username, string password);
         // 更新使用者最後登入時間（以 UTC 儲存）
