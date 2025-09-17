@@ -185,10 +185,8 @@ const registerForm = reactive({
 
 // 公開的方法，供父組件調用
 const openLogin = () => {
-  console.log('AuthModals.openLogin 被調用')
   closeModals()
   showLogin.value = true
-  console.log('showLogin.value 設為:', showLogin.value)
   authStore.clearError()
 }
 
@@ -217,7 +215,6 @@ const switchToLogin = () => {
 }
 
 const handleLogin = async () => {
-  console.log('handleLogin 被調用')
   const result = await authStore.login(loginForm)
   if (result.success) {
     closeModals()

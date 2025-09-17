@@ -332,7 +332,6 @@ const updateOrderStatus = async (order) => {
   try {
     const payload = { Status: order.status }
     await api.put(`/orders/${order.id}`, payload)
-    console.log(`訂單 ${order.id} 狀態已更新為 ${order.status}`)
     emitter.emit('order-changed')
   } catch (error) {
     console.error('更新訂單狀態失敗:', error)

@@ -179,18 +179,16 @@ app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
 
 app.MapControllers().RequireCors("AllowFrontend");
 
-// 簡化的資料庫初始化 - 移到背景執行，不阻擋應用程式啟動
-_ = Task.Run(async () =>
+// 啟動時同步初始化資料庫，避免冷啟動競態導致 500
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<DrinkShopDbContext>();
-    
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
-        await db.Database.EnsureCreatedAsync();
-        
-        // 檢查是否需要創建 admin 用戶
-        if (!await db.Users.AnyAsync(u => u.UserName == "admin"))
+        db.Database.EnsureCreated();
+
+        if (!db.Users.Any(u => u.UserName == "admin"))
         {
             var adminUser = new DrinkShop.Domain.Entities.User
             {
@@ -204,14 +202,13 @@ _ = Task.Run(async () =>
                 Status = "active"
             };
             db.Users.Add(adminUser);
-            await db.SaveChangesAsync();
+            db.SaveChanges();
         }
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Background database initialization error");
+        logger.LogError(ex, "Database initialization error at startup");
     }
-});
+}
 
 app.Run();
