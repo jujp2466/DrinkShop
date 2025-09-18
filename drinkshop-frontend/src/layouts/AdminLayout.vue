@@ -1,7 +1,9 @@
 <template>
   <div class="admin-container">
+    <!-- 遮罩：行動裝置展開側邊欄時顯示，點擊可關閉 -->
+    <div v-if="sidebarOpen" class="sidebar-backdrop" @click="closeSidebar"></div>
     <!-- 側邊欄 -->
-    <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+    <aside class="sidebar" :class="{ collapsed: sidebarCollapsed, open: sidebarOpen }">
       <div class="sidebar-header">
         <h2><i class="fas fa-tint"></i> 清涼飲品</h2>
         <p>後台管理系統</p>
@@ -90,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -99,6 +101,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const sidebarCollapsed = ref(false)
+const sidebarOpen = ref(false)
 const currentTime = ref('')
 
 // 頁面標題映射
@@ -130,9 +133,17 @@ const isUsersActive = computed(() => {
   return route.path === '/admin/users'
 })
 
-// 切換側邊欄
+// 切換側邊欄（桌機：收合寬度；行動：抽屜開關）
 const toggleSidebar = () => {
-  sidebarCollapsed.value = !sidebarCollapsed.value
+  if (window.innerWidth <= 1024) {
+    sidebarOpen.value = !sidebarOpen.value
+  } else {
+    sidebarCollapsed.value = !sidebarCollapsed.value
+  }
+}
+
+const closeSidebar = () => {
+  sidebarOpen.value = false
 }
 
 // 登出
@@ -157,15 +168,30 @@ const updateTime = () => {
 }
 
 let timeInterval = null
+const handleResize = () => {
+  if (window.innerWidth > 1024) {
+    // 返回桌機視窗時關閉行動抽屜
+    sidebarOpen.value = false
+  }
+}
 
 onMounted(() => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval)
+  }
+  window.removeEventListener('resize', handleResize)
+})
+
+// 路由切換時，自動關閉行動抽屜
+watch(() => route.fullPath, () => {
+  if (window.innerWidth <= 1024) {
+    sidebarOpen.value = false
   }
 })
 </script>
@@ -175,6 +201,13 @@ onUnmounted(() => {
   display: flex;
   height: 100vh;
   background-color: #f8fafc;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 998;
 }
 
 .sidebar {
@@ -323,6 +356,28 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* 手機/窄螢幕：側邊欄改為抽屜模式 */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+  width: 50vw;
+  max-width: 200px;
+  min-width: 120px;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
 }
 
 .top-nav {
