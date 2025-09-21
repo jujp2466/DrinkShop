@@ -1,3 +1,7 @@
+# Ignore Jupyter notebook and all project description markdown files
+DrinkShop-CleanArch-Vue3.ipynb
+專案說明.md
+**/專案說明.md
 # Ignore temporary SQL query files
 .tmp_sql_query
 ## Ignore Visual Studio temporary files, build results, and
