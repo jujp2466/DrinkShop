@@ -44,7 +44,7 @@ namespace DrinkShop.Api.Controllers
         /// 新增商品
         /// </summary>
         [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Create([FromBody] ProductDto input)
         {
             var product = await _service.CreateAsync(input);
@@ -56,7 +56,7 @@ namespace DrinkShop.Api.Controllers
         /// 更新商品
         /// </summary>
         [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update(int id, [FromBody] ProductDto input)
         {
             var product = await _service.UpdateAsync(id, input);
@@ -69,7 +69,7 @@ namespace DrinkShop.Api.Controllers
         /// 刪除商品
         /// </summary>
         [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(int id)
         {
             var success = await _service.DeleteAsync(id);
