@@ -409,3 +409,7 @@ PROJECT_DEBRIEF_*.md
 # Globally ignore all markdown files
 *.md
 **/*.md
+# lighthouse reports
+/lighthouse-*.json
+/drinkshop-frontend/lighthouse-*.json
+
